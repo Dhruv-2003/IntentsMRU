@@ -6,6 +6,7 @@ import Navbar from "@/components/navbar";
 import { cn } from "@/lib/utils";
 import Provider from "@/components/provider";
 import { Toaster } from "@/components/ui/sonner";
+import Link from "next/link";
 
 const basier = local({
   src: [

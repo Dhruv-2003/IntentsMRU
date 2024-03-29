@@ -10,5 +10,5 @@ export default function Loading() {
 }
 
 export function Loader() {
-  return <Loader2Icon className="size-5 animate-spin text-white" />;
+  return <Loader2Icon className="size-5 animate-spin text-neutral-800" />;
 }
