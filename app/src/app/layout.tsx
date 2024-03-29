@@ -10,7 +10,7 @@ import { Toaster } from "@/components/ui/sonner";
 const basier = local({
   src: [
     {
-      path: "../../public/fonts/BasierSquare-Regular.otf",
+      path: "../../public/fonts/BasierCircle-Regular.otf",
       weight: "800",
     },
   ],
@@ -29,7 +29,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={cn(basier.className, "max-w-7xl mx-auto")}>
+      <body className={cn("max-w-7x mx-auto")}>
         <Provider>
           <Navbar />
           <div>{children}</div>
