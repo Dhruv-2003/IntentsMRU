@@ -10,17 +10,31 @@ function generateSchemaFromBase(name: string) {
 }
 
 // createAccountSchema is a schema for creating an account
-export const createAccountSchema = new ActionSchema("createAccount", {
+export const registerSolverSchema = new ActionSchema("register", {
   address: SolidityType.ADDRESS,
 });
 
-// transferSchema is a collection of all the transfer actions
-// that can be performed on the rollup
+export const requestInentSchema = new ActionSchema("request", {
+  requestId: SolidityType.UINT,
+  userAddress: SolidityType.ADDRESS,
+  intent: SolidityType.STRING,
+});
+
+export const solveInentSchema = new ActionSchema("solve", {
+  requestId: SolidityType.UINT,
+  solverAddress: SolidityType.ADDRESS,
+  params: SolidityType.STRING,
+  abi: SolidityType.STRING,
+  protocolAddress: SolidityType.ADDRESS,
+  txValue: SolidityType.UINT,
+});
+
 export const schemas = {
-  create: createAccountSchema,
-  transfer: generateSchemaFromBase("transfer"),
-  transferFrom: generateSchemaFromBase("transferFrom"),
-  mint: generateSchemaFromBase("mint"),
-  burn: generateSchemaFromBase("burn"),
-  approve: generateSchemaFromBase("approve"),
+  register: registerSolverSchema,
+  request: requestInentSchema,
+  solve: solveInentSchema,
 };
+
+// register - register themselves as solver in the network , TODO: Possible addition of slashing / staking
+// request -  request the intent solving , basically adding the intent in the pool
+// solve - submitted an intent solution by a solver

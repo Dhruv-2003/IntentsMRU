@@ -1,143 +1,77 @@
 import { Reducers, STF } from "@stackr/sdk/machine";
-import { ERC20, BetterMerkleTree as StateWrapper } from "./state";
+import { SolverMarket, SolverMarketTransport as StateWrapper } from "./state";
+import { AddressLike } from "ethers";
 
 // --------- Utilities ---------
-const findIndexOfAccount = (state: StateWrapper, address: string) => {
-  return state.leaves.findIndex((leaf) => leaf.address === address);
+const findIndexOfIntent = (state: StateWrapper, requestId: number) => {
+  return state.intents.findIndex((intent) => intent.requestId === requestId);
 };
 
-type CreateInput = {
-  address: string;
+export type RegisterType = {
+  address: AddressLike;
 };
 
-type BaseActionInput = {
-  from: string;
-  to: string;
-  amount: number;
+export type RequestType = {
+  requestId: number;
+  userAddress: AddressLike;
+  intent: string;
+};
+
+export type SolveType = {
+  requestId: number;
+  solverAddress: AddressLike;
+  params: string;
+  abi: string;
+  protocolAddress: AddressLike;
+  txValue: number;
 };
 
 // --------- State Transition Handlers ---------
-const create: STF<ERC20, CreateInput> = {
+const registerHandler: STF<SolverMarket, RegisterType> = {
   handler: ({ inputs, state }) => {
     const { address } = inputs;
-    if (state.leaves.find((leaf) => leaf.address === address)) {
+    if (state.solvers.find((_address) => _address === address)) {
       throw new Error("Account already exists");
     }
-    state.leaves.push({
-      address,
-      balance: 0,
-      nonce: 0,
-      allowances: [],
-    });
+    state.solvers.push(address);
     return state;
   },
 };
 
-const mint: STF<ERC20, BaseActionInput> = {
+const requestHandler: STF<SolverMarket, RequestType> = {
   handler: ({ inputs, state }) => {
-    const { to, amount } = inputs;
+    const { requestId, userAddress, intent } = inputs;
+    if (state.intents.find((intent) => intent.requestId === requestId)) {
+      throw new Error("Request already exists");
+    }
+    state.intents[requestId].requestId = requestId;
+    state.intents[requestId].intent = intent;
+    state.intents[requestId].userAddress = userAddress;
 
-    const index = findIndexOfAccount(state, to);
-    state.leaves[index].balance += amount;
     return state;
   },
 };
 
-const burn: STF<ERC20, BaseActionInput> = {
+const solveHandler: STF<SolverMarket, SolveType> = {
   handler: ({ inputs, state, msgSender }) => {
-    const { from, amount } = inputs;
-
-    const index = findIndexOfAccount(state, from);
-
-    if (state.leaves[index].address !== msgSender) {
-      throw new Error("Unauthorized");
+    const { requestId, solverAddress, params, abi, protocolAddress, txValue } =
+      inputs;
+    if (!state.intents.find((intent) => intent.requestId === requestId)) {
+      throw new Error("Request doesn't exists");
     }
-    state.leaves[index].balance -= amount;
+    state.intents[requestId].solverAddress = solverAddress;
+    state.intents[requestId].params = JSON.parse(params) as any[];
+    state.intents[requestId].ABI = abi;
+    state.intents[requestId].protocolAddress = protocolAddress;
+    state.intents[requestId].txValue = txValue;
+
+    // actually solve the intent , check restriction in terms of the protocol we are using
     return state;
   },
 };
 
-const transfer: STF<ERC20, BaseActionInput> = {
-  handler: ({ inputs, state, msgSender }) => {
-    const { to, from, amount } = inputs;
-
-    const fromIndex = findIndexOfAccount(state, from);
-    const toIndex = findIndexOfAccount(state, to);
-
-    // check if the sender is the owner of the account
-    if (state.leaves[fromIndex]?.address !== msgSender) {
-      throw new Error("Unauthorized");
-    }
-
-    // check if the sender has enough balance
-    if (state.leaves[fromIndex]?.balance < inputs.amount) {
-      throw new Error("Insufficient funds");
-    }
-
-    // check if to account exists
-    if (!state.leaves[toIndex]) {
-      throw new Error("Account does not exist");
-    }
-
-    state.leaves[fromIndex].balance -= amount;
-    state.leaves[toIndex].balance += amount;
-    return state;
-  },
-};
-
-const approve: STF<ERC20, BaseActionInput> = {
-  handler: ({ inputs, state, msgSender }) => {
-    const { from, to, amount } = inputs;
-
-    const index = findIndexOfAccount(state, from);
-    if (state.leaves[index].address !== msgSender) {
-      throw new Error("Unauthorized");
-    }
-
-    state.leaves[index].allowances.push({ address: to, amount });
-    return state;
-  },
-};
-
-const transferFrom: STF<ERC20, BaseActionInput> = {
-  handler: ({ inputs, state, msgSender }) => {
-    const { to, from, amount } = inputs;
-
-    // check if the msgSender has enough allowance from the owner
-    const toIndex = findIndexOfAccount(state, to);
-    const fromIndex = findIndexOfAccount(state, from);
-
-    const allowance = state.leaves[fromIndex].allowances.find(
-      (allowance) => allowance.address === msgSender
-    );
-    if (!allowance || allowance.amount < inputs.amount) {
-      throw new Error("Insufficient allowance");
-    }
-
-    // check if the sender has enough balance
-    if (state.leaves[fromIndex].balance < inputs.amount) {
-      throw new Error("Insufficient funds");
-    }
-
-    state.leaves[fromIndex].balance -= amount;
-    state.leaves[toIndex].balance += amount;
-    state.leaves[fromIndex].allowances = state.leaves[fromIndex].allowances.map(
-      (allowance) => {
-        if (allowance.address === msgSender) {
-          allowance.amount -= amount;
-        }
-        return allowance;
-      }
-    );
-    return state;
-  },
-};
-
-export const reducers: Reducers<ERC20> = {
-  create,
-  mint,
-  burn,
-  transfer,
-  approve,
-  transferFrom,
+export const reducers: Reducers<SolverMarket> = {
+  register: registerHandler,
+  request: requestHandler,
+  solve: solveHandler,
 };
