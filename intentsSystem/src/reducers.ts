@@ -1,6 +1,6 @@
 import { Reducers, STF } from "@stackr/sdk/machine";
 import { SolverMarket, SolverMarketTransport as StateWrapper } from "./state";
-import { AddressLike, Interface, parseEther } from "ethers";
+import { AddressLike, Interface, ZeroAddress, parseEther } from "ethers";
 
 // --------- Utilities ---------
 const findIndexOfIntent = (state: StateWrapper, requestId: number) => {
@@ -42,25 +42,27 @@ const registerHandler: STF<SolverMarket, RegisterType> = {
 const requestHandler: STF<SolverMarket, RequestType> = {
   handler: ({ inputs, state }) => {
     const { requestId, userAddress, intent } = inputs;
+
+    //TODO: Check is a solver is calling it
+
     if (state.intents.find((intent) => intent.requestId === requestId)) {
       throw new Error("Request already exists");
     }
-    state.intents[requestId].requestId = requestId;
-    state.intents[requestId].intent = intent;
-    state.intents[requestId].userAddress = userAddress;
 
     state.intents.push({
       requestId: requestId,
       userAddress: userAddress,
-      solverAddress: "",
+      solverAddress: ZeroAddress,
       intent: intent,
       params: [],
       ABIFunction: "",
       functionName: "",
-      protocolAddress: "",
+      protocolAddress: ZeroAddress,
       txValue: 0,
       solvedTxData: {},
     });
+
+    state.totalRequests += 1;
 
     return state;
   },

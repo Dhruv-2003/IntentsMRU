@@ -1,4 +1,4 @@
-import { Wallet } from "ethers";
+import { Wallet, parseEther } from "ethers";
 import { schemas } from "./src/actions";
 import { stackrConfig } from "./stackr.config";
 
@@ -8,33 +8,61 @@ type ActionName = keyof typeof schemas;
 
 const walletOne = new Wallet(
   "0x0123456789012345678901234567890123456789012345678901234567890123"
-);
+); // solver
+
 const walletTwo = new Wallet(
   "0x0123456789012345678901234567890123456789012345678901234567890124"
-);
+); // user
 
 const getBody = async (actionName: ActionName, wallet: Wallet) => {
   const walletAddress = wallet.address;
-  const payload =
-    actionName === "announce"
-      ? {
-          stealthAddress: "0x084c53dad73b23f7d709fdcc2edbe5caa44bccce",
-          ephemeralPublicKey:
-            "0x0391e14240e98bc771f00b5ad49f3f7ec92fd498e43f04708fd61f02fddc0931f2",
-          viewTag: 33,
-        }
-      : {
-          publicAddress: "0x084c53dad73b23f7d709fdcc2edbe5caa44bccce",
-          stelathMetaAddress:
-            "0x02f868433a12a9d57e355176a00ee6b5c80ed1fe2c939d81062e0251081994f039022290fba566a42824f283e54582fc4fefb0767f04551c748aa8bd8b66bef677cf",
-          schemeId: 0,
-        };
+  const res = await fetch(`http://localhost:3000/`);
+  const newReqId = (await res.json()).state.totalRequests;
+  console.log(newReqId);
+
+  let payload;
+  if (actionName === "register") {
+    payload = {
+      address: walletAddress,
+    };
+  } else if (actionName === "request") {
+    payload = {
+      requestId: newReqId,
+      userAddress: walletAddress,
+      intent: "I want to swap WMATIC for 0.00001USDC",
+    };
+  } else if (actionName === "solve") {
+    const timestamp = Math.round(new Date().getTime() / 1000);
+    payload = {
+      requestId: newReqId - 1,
+      solverAddress: walletAddress,
+      params: JSON.stringify([
+        parseEther("0.0001").toString(),
+        "0",
+        [
+          "0x8954afa98594b838bda56fe4c12a09d7739d179b",
+          "0x8954afa98594b838bda56fe4c12a09d7739d179b",
+        ],
+        walletAddress,
+        timestamp,
+      ]),
+      abiFunction:
+        "function swapExactTokensForTokens(uint amountIn,uint amountOutMin,address[] path,address to,uint deadline)",
+      functionName: "swapExactTokensForTokens",
+      protocolAddress: "0x8954afa98594b838bda56fe4c12a09d7739d179b",
+      txValue: 0,
+    };
+  }
+  // console.log(payload);
+  // console.log(schemas[actionName].EIP712TypedData.types);
 
   const signature = await wallet.signTypedData(
     domain,
     schemas[actionName].EIP712TypedData.types,
     payload
   );
+
+  console.log(signature);
 
   const body = JSON.stringify({
     msgSender: walletAddress,

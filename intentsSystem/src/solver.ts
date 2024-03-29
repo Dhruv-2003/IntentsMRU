@@ -9,6 +9,7 @@ type SolverMarketMachine = typeof solverMarketStateMachine;
 const mru = await MicroRollup({
   config: stackrConfig,
   actions: [...Object.values(schemas)],
+  isSandbox: true,
 });
 
 mru.stateMachines.add(solverMarketStateMachine);
