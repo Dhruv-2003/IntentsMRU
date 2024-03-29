@@ -1,16 +1,16 @@
 import { StateMachine } from "@stackr/sdk/machine";
 import genesisState from "../genesis-state.json";
 import { reducers } from "./reducers";
-import { ERC20 } from "./state";
+import { SolverMarket } from "./state";
 
 const STATE_MACHINES = {
-  ERC20: "erc-20",
+  SolverMarket: "solver-market",
 };
 
-const erc20StateMachine = new StateMachine({
-  id: STATE_MACHINES.ERC20,
-  state: new ERC20(genesisState.state),
+const solverMarketStateMachine = new StateMachine({
+  id: STATE_MACHINES.SolverMarket,
+  state: new SolverMarket(genesisState.state),
   on: reducers,
 });
 
-export { STATE_MACHINES, erc20StateMachine };
+export { STATE_MACHINES, solverMarketStateMachine };

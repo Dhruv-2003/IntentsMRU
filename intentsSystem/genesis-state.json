@@ -1,3 +1,7 @@
 {
-    "state": []
+  "state": {
+    "intents": [],
+    "totalRequests": 0,
+    "solvers": []
+  }
 }
