@@ -13,7 +13,8 @@ export type IntentType = {
   solverAddress: AddressLike;
   intent: string;
   params: any[]; // in format [param1 , param2]
-  ABI: string; // in format "function name(uint param1, bytes param2)"
+  ABIFunction: string; // in format "function name(uint param1, bytes param2)"
+  functionName: string; // function Name for interface
   protocolAddress: AddressLike; // to address
   txValue: number; // in ethers format
   solvedTxData: {}; // { to: ,  data: , value:  }
@@ -48,6 +49,7 @@ export class SolverMarketTransport {
           "string",
           "string",
           "string",
+          "string",
           "address",
           "uint",
           "string",
@@ -58,7 +60,8 @@ export class SolverMarketTransport {
           leaf.solverAddress,
           leaf.intent,
           JSON.stringify(leaf.params),
-          leaf.ABI,
+          leaf.ABIFunction,
+          leaf.functionName,
           leaf.protocolAddress,
           leaf.txValue,
           JSON.stringify(leaf.solvedTxData),

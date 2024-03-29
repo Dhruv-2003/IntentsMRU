@@ -1,6 +1,6 @@
 import { Reducers, STF } from "@stackr/sdk/machine";
 import { SolverMarket, SolverMarketTransport as StateWrapper } from "./state";
-import { AddressLike } from "ethers";
+import { AddressLike, Interface, parseEther } from "ethers";
 
 // --------- Utilities ---------
 const findIndexOfIntent = (state: StateWrapper, requestId: number) => {
@@ -21,7 +21,8 @@ export type SolveType = {
   requestId: number;
   solverAddress: AddressLike;
   params: string;
-  abi: string;
+  abiFunction: string;
+  functionName: string;
   protocolAddress: AddressLike;
   txValue: number;
 };
@@ -54,20 +55,79 @@ const requestHandler: STF<SolverMarket, RequestType> = {
 
 const solveHandler: STF<SolverMarket, SolveType> = {
   handler: ({ inputs, state, msgSender }) => {
-    const { requestId, solverAddress, params, abi, protocolAddress, txValue } =
-      inputs;
+    const {
+      requestId,
+      solverAddress,
+      params,
+      abiFunction,
+      functionName,
+      protocolAddress,
+      txValue,
+    } = inputs;
     if (!state.intents.find((intent) => intent.requestId === requestId)) {
       throw new Error("Request doesn't exists");
     }
     state.intents[requestId].solverAddress = solverAddress;
     state.intents[requestId].params = JSON.parse(params) as any[];
-    state.intents[requestId].ABI = abi;
+    state.intents[requestId].ABIFunction = abiFunction;
+    state.intents[requestId].functionName = functionName;
     state.intents[requestId].protocolAddress = protocolAddress;
     state.intents[requestId].txValue = txValue;
 
-    // actually solve the intent , check restriction in terms of the protocol we are using
+    // actually solve the intent
+    const txData = createTxData({
+      params: JSON.parse(params) as any[],
+      abiFunction: abiFunction,
+      functionName: functionName,
+      protocolAddress: protocolAddress,
+      txValue: txValue,
+    });
+
+    // TODO: check restriction in terms of the protocol we are using, so the protocol addres is correct
+    // Function even exists for that protocol in the config
+
+    state.intents[requestId].solvedTxData = JSON.stringify(txData);
+
     return state;
   },
+};
+
+interface createTxDataType {
+  params: any[];
+  abiFunction: string;
+  functionName: string;
+  protocolAddress: AddressLike;
+  txValue: number;
+}
+
+interface createTxDataReturnType {
+  to: AddressLike;
+  data: string;
+  value: bigint | number;
+}
+
+export const createTxData = (
+  inputs: createTxDataType
+): createTxDataReturnType | undefined => {
+  const abiInterface = new Interface([inputs.abiFunction]);
+
+  const argInputs = inputs.params;
+  try {
+    const encodedData = abiInterface.encodeFunctionData(
+      inputs.functionName,
+      argInputs
+    );
+
+    const tx = {
+      to: inputs.protocolAddress,
+      data: encodedData,
+      value: inputs.txValue ? parseEther(inputs.txValue.toString()) : 0,
+    };
+
+    return tx;
+  } catch (error) {
+    throw new Error(`${error}`);
+  }
 };
 
 export const reducers: Reducers<SolverMarket> = {
