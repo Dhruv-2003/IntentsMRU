@@ -49,6 +49,19 @@ const requestHandler: STF<SolverMarket, RequestType> = {
     state.intents[requestId].intent = intent;
     state.intents[requestId].userAddress = userAddress;
 
+    state.intents.push({
+      requestId: requestId,
+      userAddress: userAddress,
+      solverAddress: "",
+      intent: intent,
+      params: [],
+      ABIFunction: "",
+      functionName: "",
+      protocolAddress: "",
+      txValue: 0,
+      solvedTxData: {},
+    });
+
     return state;
   },
 };
@@ -67,12 +80,14 @@ const solveHandler: STF<SolverMarket, SolveType> = {
     if (!state.intents.find((intent) => intent.requestId === requestId)) {
       throw new Error("Request doesn't exists");
     }
-    state.intents[requestId].solverAddress = solverAddress;
-    state.intents[requestId].params = JSON.parse(params) as any[];
-    state.intents[requestId].ABIFunction = abiFunction;
-    state.intents[requestId].functionName = functionName;
-    state.intents[requestId].protocolAddress = protocolAddress;
-    state.intents[requestId].txValue = txValue;
+
+    const reqIndex = findIndexOfIntent(state, requestId);
+    state.intents[reqIndex].solverAddress = solverAddress;
+    state.intents[reqIndex].params = JSON.parse(params) as any[];
+    state.intents[reqIndex].ABIFunction = abiFunction;
+    state.intents[reqIndex].functionName = functionName;
+    state.intents[reqIndex].protocolAddress = protocolAddress;
+    state.intents[reqIndex].txValue = txValue;
 
     // actually solve the intent
     const txData = createTxData({
@@ -86,7 +101,7 @@ const solveHandler: STF<SolverMarket, SolveType> = {
     // TODO: check restriction in terms of the protocol we are using, so the protocol addres is correct
     // Function even exists for that protocol in the config
 
-    state.intents[requestId].solvedTxData = JSON.stringify(txData);
+    state.intents[reqIndex].solvedTxData = JSON.stringify(txData);
 
     return state;
   },

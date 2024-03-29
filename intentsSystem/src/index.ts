@@ -3,12 +3,13 @@ import express, { Request, Response } from "express";
 import { ActionEvents } from "@stackr/sdk";
 import { Playground } from "@stackr/sdk/plugins";
 import { schemas } from "./actions.ts";
-import { ERC20Machine, mru } from "./erc20.ts";
+import { SolverMarketMachine, mru } from "./solver.ts";
 import { reducers } from "./reducers.ts";
 
 console.log("Starting server...");
 
-const erc20Machine = mru.stateMachines.get<ERC20Machine>("erc-20");
+const erc20Machine =
+  mru.stateMachines.get<SolverMarketMachine>("solver-market");
 
 const app = express();
 app.use(express.json());
