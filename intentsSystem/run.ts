@@ -44,7 +44,7 @@ const getBody = async (actionName: ActionName, wallet: Wallet) => {
           "0x8954afa98594b838bda56fe4c12a09d7739d179b",
         ],
         walletAddress,
-        timestamp,
+        `${timestamp}`,
       ]),
       abiFunction:
         "function swapExactTokensForTokens(uint amountIn,uint amountOutMin,address[] path,address to,uint deadline)",
@@ -56,21 +56,25 @@ const getBody = async (actionName: ActionName, wallet: Wallet) => {
   // console.log(payload);
   // console.log(schemas[actionName].EIP712TypedData.types);
 
-  const signature = await wallet.signTypedData(
-    domain,
-    schemas[actionName].EIP712TypedData.types,
-    payload
-  );
+  try {
+    const signature = await wallet.signTypedData(
+      domain,
+      schemas[actionName].EIP712TypedData.types,
+      payload
+    );
 
-  console.log(signature);
+    console.log(signature);
 
-  const body = JSON.stringify({
-    msgSender: walletAddress,
-    signature,
-    payload,
-  });
+    const body = JSON.stringify({
+      msgSender: walletAddress,
+      signature,
+      payload,
+    });
 
-  return body;
+    return body;
+  } catch (error) {
+    console.log(error);
+  }
 };
 
 const run = async (actionName: ActionName, wallet: Wallet) => {

@@ -43,8 +43,6 @@ const requestHandler: STF<SolverMarket, RequestType> = {
   handler: ({ inputs, state }) => {
     const { requestId, userAddress, intent } = inputs;
 
-    //TODO: Check is a solver is calling it
-
     if (state.intents.find((intent) => intent.requestId === requestId)) {
       throw new Error("Request already exists");
     }
@@ -81,6 +79,11 @@ const solveHandler: STF<SolverMarket, SolveType> = {
     } = inputs;
     if (!state.intents.find((intent) => intent.requestId === requestId)) {
       throw new Error("Request doesn't exists");
+    }
+
+    //TODO: Check is a solver is calling
+    if (!state.solvers.find((solver) => solver === msgSender)) {
+      throw new Error("Only solver can solve intents");
     }
 
     const reqIndex = findIndexOfIntent(state, requestId);
