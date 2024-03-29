@@ -8,20 +8,13 @@ import { reducers } from "./reducers.ts";
 
 console.log("Starting server...");
 
-const erc20Machine =
+const solverMarketMachine =
   mru.stateMachines.get<SolverMarketMachine>("solver-market");
 
 const app = express();
 app.use(express.json());
 
 const playground = Playground.init(mru);
-
-playground.addGetMethod(
-  "/custom/hello",
-  async (_req: Request, res: Response) => {
-    res.send("Hello World");
-  }
-);
 
 const { actions, chain, events } = mru;
 
@@ -80,7 +73,7 @@ events.subscribe(ActionEvents.EXECUTION_STATUS, async (action) => {
 });
 
 app.get("/", (_req: Request, res: Response) => {
-  return res.send({ state: erc20Machine?.state.unwrap() });
+  return res.send({ state: solverMarketMachine?.state.unwrap() });
 });
 
 app.listen(3000, () => {

@@ -38,7 +38,7 @@ const stackrConfig: StackrConfig = {
     salt: "0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
   },
   datastore: {
-    uri: "./erc20.sqlite",
+    uri: "./solverMarket.sqlite",
   },
   registryContract: REGISTRY_CONTRACT,
   logLevel: "log",
