@@ -5,6 +5,8 @@ import { Playground } from "@stackr/sdk/plugins";
 import { schemas } from "./actions.ts";
 import { SolverMarketMachine, mru } from "./solver.ts";
 import { reducers } from "./reducers.ts";
+import cors from "cors";
+import { IntentType } from "./state.ts";
 
 console.log("Starting server...");
 
@@ -13,6 +15,7 @@ const solverMarketMachine =
 
 const app = express();
 app.use(express.json());
+app.use(cors());
 
 const playground = Playground.init(mru);
 
@@ -75,6 +78,31 @@ events.subscribe(ActionEvents.EXECUTION_STATUS, async (action) => {
 
 app.get("/", (_req: Request, res: Response) => {
   return res.send({ state: solverMarketMachine?.state.unwrap() });
+});
+
+type ActionName = keyof typeof schemas;
+
+app.get("/getEIP712Types/:action", (_req: Request, res: Response) => {
+  // @ts-ignore
+  const { action }: { action: ActionName } = _req.params;
+
+  const eip712Types = schemas[action].EIP712TypedData.types;
+  return res.send({ eip712Types });
+});
+
+app.get("/intent/:requestId", (_req: Request, res: Response) => {
+  // @ts-ignore
+  const { requestId }: { requestId: number } = _req.params;
+  const intents = solverMarketMachine?.state.unwrap().intents;
+
+  const intentRequest: IntentType | undefined = intents?.find(
+    (intent) => intent.requestId == requestId
+  );
+
+  if (!intentRequest) {
+    res.status(400).send({ error: "Intent Request not found" });
+  }
+  return res.send({ intentRequest });
 });
 
 app.listen(5050, () => {
