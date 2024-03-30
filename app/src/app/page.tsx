@@ -1,3 +1,4 @@
+"use client";
 import Image from "next/image";
 import flow from "@/assets/flow.jpeg";
 import arrow from "@/assets/arroow.svg";
@@ -10,6 +11,25 @@ import Features from "./features";
 import { XIcon } from "lucide-react";
 
 export default function Home() {
+  const performAPICall = async () => {
+    try {
+      const body = JSON.stringify({
+        requestId: 1,
+        intent: "I want to bridge WETH for 0.00001USDC",
+      });
+      const data = await fetch("/api/intents", {
+        method: "POST",
+        body,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      console.log(data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
   return (
     <div>
       <main className=" grid grid-cols-12 min-h-screen bg-gradient-to-b from-purple-400/40 via-violet-500/40 to-indigo-600/40 py-20 max-w-7xl mx-auto rounded-xl rounded-b-none">
