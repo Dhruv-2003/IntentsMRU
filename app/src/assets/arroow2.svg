@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink"
+    xmlns:svgjs="http://svgjs.dev/svgjs" viewBox="0 0 800 800">
+    <g stroke-width="10" stroke="hsl(0, 6%, 36%)" fill="none" stroke-linecap="round"
+        stroke-linejoin="round" stroke-dasharray="24.5 24"
+        transform="matrix(-0.25881904510252063,-0.9659258262890683,0.9659258262890683,-0.25881904510252063,105.15728752538098,906.8979485566356)">
+        <path
+            d="M159 128.03602981567383Q533 -24.963970184326172 400 369.0360298156738Q207 905.0360298156738 641 610.0360298156738 "
+            marker-end="url(#SvgjsMarker4221)"></path>
+    </g>
+    <defs>
+        <marker markerWidth="3.5" markerHeight="3.5" refX="1.75" refY="1.75" viewBox="0 0 3.5 3.5"
+            orient="auto" id="SvgjsMarker4221">
+            <polygon points="0,3.5 1.1666666666666667,1.75 0,0 3.5,1.75" fill="hsl(0, 6%, 36%)"></polygon>
+        </marker>
+    </defs>
+</svg>

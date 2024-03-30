@@ -54,7 +54,7 @@ export default function IntentSuggestions({ setIntent }: Props) {
         <Card
           key={idx}
           onClick={() => setIntent(suggestion.description)}
-          className="md:col-span-4 w-full hover:bg-white/70 transition-all ease-in-out active:scale-95 cursor-pointer"
+          className="md:col-span-4 w-full hover:bg-white/90 transition-all ease-in-out active:scale-95 cursor-pointer"
         >
           <CardHeader>
             <div className=" flex items-center justify-between">
