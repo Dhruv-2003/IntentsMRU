@@ -4,7 +4,7 @@
 
 Translating intents into on-chain actions - Briging the power of blockchain with natural language interactions, enabled by Intents-MRU's decentralized solver network.
 
-![Screenshot 2024-03-31 at 1.30.59 AM](https://hackmd.io/_uploads/HJ2KJxIy0.png)
+<img width="1320" alt="Screenshot 2024-03-31 at 1 34 44 AM" src="https://github.com/Dhruv-2003/IntentsMRU/assets/76868364/080df39e-e5be-4caa-b6d8-f89310514ce6">
 
 ## Problem we are trying to solve:
 
