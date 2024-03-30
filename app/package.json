@@ -23,6 +23,7 @@
     "lucide-react": "^0.363.0",
     "next": "14.1.4",
     "next-themes": "^0.3.0",
+    "openai": "^4.31.0",
     "react": "^18",
     "react-dom": "^18",
     "sonner": "^1.4.41",

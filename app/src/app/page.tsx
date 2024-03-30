@@ -1,3 +1,4 @@
+"use client";
 import Image from "next/image";
 import flow from "@/assets/flow.jpeg";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -5,6 +6,25 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 export default function Home() {
+  const performAPICall = async () => {
+    try {
+      const body = JSON.stringify({
+        requestId: 1,
+        intent: "I want to bridge WETH for 0.00001USDC",
+      });
+      const data = await fetch("/api/intents", {
+        method: "POST",
+        body,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      console.log(data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
   return (
     <main className=" grid grid-cols-12 min-h-screen ">
       <div className="min-h-[60vh] col-span-12 flex items-center justify-start flex-col pt-14">
@@ -14,6 +34,7 @@ export default function Home() {
             Lorem ipsum dolor sit amet consectetur adipisicing elit. Beatae
             molestiae ratione culpa, totam similique ipsum autem cupiditate
           </p>
+          <Button onClick={performAPICall}>Call</Button>
           <Link
             href={"/app"}
             className={cn(buttonVariants({ variant: "default" }))}
