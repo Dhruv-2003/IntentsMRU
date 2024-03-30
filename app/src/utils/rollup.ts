@@ -118,50 +118,50 @@ interface SolveIntentType {
 export const solveIntent = async (solveIntentData: SolveIntentType) => {
   console.log(solveIntentData);
 
-  // const wallet = new Wallet(
-  //   "0x0123456789012345678901234567890123456789012345678901234567890123"
-  // );
+  const wallet = new Wallet(
+    "0x0123456789012345678901234567890123456789012345678901234567890123"
+  );
 
-  // const actionName = "solve";
+  const actionName = "solve";
 
-  // try {
-  //   const response = await fetch(
-  //     `${process.env.ROLLUP_HOST}/getEIP712Types/${actionName}`
-  //   );
+  try {
+    const response = await fetch(
+      `${process.env.ROLLUP_HOST}/getEIP712Types/${actionName}`
+    );
 
-  //   const eip712Types = (await response.json()).eip712Types;
+    const eip712Types = (await response.json()).eip712Types;
 
-  //   const payload: SolveType = {
-  //     requestId: solveIntentData.requestId,
-  //     solverAddress: wallet.address,
-  //     params: JSON.stringify(solveIntentData.params),
-  //     abiFunction: solveIntentData.abiFunction,
-  //     functionName: solveIntentData.functionName,
-  //     protocolAddress: solveIntentData.protocolAddress,
-  //     txValue: solveIntentData.txValue,
-  //   };
+    const payload: SolveType = {
+      requestId: solveIntentData.requestId,
+      solverAddress: wallet.address,
+      params: JSON.stringify(solveIntentData.params),
+      abiFunction: solveIntentData.abiFunction,
+      functionName: solveIntentData.functionName,
+      protocolAddress: solveIntentData.protocolAddress,
+      txValue: solveIntentData.txValue,
+    };
 
-  //   const signature = await wallet.signTypedData(domain, eip712Types, payload);
+    const signature = await wallet.signTypedData(domain, eip712Types, payload);
 
-  //   const body = JSON.stringify({
-  //     msgSender: wallet.address,
-  //     signature,
-  //     payload,
-  //   });
+    const body = JSON.stringify({
+      msgSender: wallet.address,
+      signature,
+      payload,
+    });
 
-  //   const res = await fetch(`${process.env.ROLLUP_HOST}/${actionName}`, {
-  //     method: "POST",
-  //     body,
-  //     headers: {
-  //       "Content-Type": "application/json",
-  //     },
-  //   });
+    const res = await fetch(`${process.env.ROLLUP_HOST}/${actionName}`, {
+      method: "POST",
+      body,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
 
-  //   const json = await res.json();
-  //   console.log(`Response: ${JSON.stringify(json, null, 2)}`);
-  //   console.log(json);
-  //   return { ack: json };
-  // } catch (error) {
-  //   console.log(error);
-  // }
+    const json = await res.json();
+    console.log(`Response: ${JSON.stringify(json, null, 2)}`);
+    console.log(json);
+    return { ack: json };
+  } catch (error) {
+    console.log(error);
+  }
 };

@@ -132,7 +132,7 @@ interface createTxDataReturnType {
 export const createTxData = (
   inputs: createTxDataType
 ): createTxDataReturnType | undefined => {
-  const abiInterface = new Interface([inputs.abiFunction]);
+  const abiInterface = new Interface([JSON.parse(inputs.abiFunction)]);
 
   const argInputs = inputs.params;
   try {

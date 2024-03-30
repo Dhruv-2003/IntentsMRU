@@ -14,9 +14,9 @@ export default function Home() {
   const performAPICall = async () => {
     try {
       const body = JSON.stringify({
-        requestId: 1,
+        requestId: 0,
         intent: "I want to swap WMATIC for 0.00001USDC",
-        userAddress: "0x898d0DBd5850e086E6C09D2c83A26Bb5F1ff8C33",
+        userAddress: "0x4C42F75ceae7b0CfA9588B940553EB7008546C29",
       });
 
       const data = await fetch("/api/intents", {

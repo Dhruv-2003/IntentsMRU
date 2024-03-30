@@ -55,15 +55,15 @@ async function pollEndpoint() {
 
     console.log("Solving the Intent ...");
 
-    const data = await fetch("/api/intents", {
-      method: "POST",
-      body,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    // const data = await fetch("/api/intents", {
+    //   method: "POST",
+    //   body,
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //   },
+    // });
 
-    console.log(`Intent Solved & Stored in MRU ${await data.json()}`);
+    // console.log(`Intent Solved & Stored in MRU ${await data.json()}`);
   });
 }
 

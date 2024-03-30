@@ -1,4 +1,4 @@
-import { Interface, ethers } from "ethers";
+import { Interface, ethers, parseUnits } from "ethers";
 import OpenAI from "openai";
 import {
   ERC20_ABI,
@@ -18,6 +18,14 @@ const tokenAddresses: { [token: string]: string } = {
   usdt: "0x1fdE0eCc619726f4cD597887C9F3b4c8740e19e2",
 };
 
+const tokenDecimals: { [token: string]: number } = {
+  matic: 18,
+  usdc: 6,
+  wmatic: 18,
+  weth: 18,
+  usdt: 6,
+};
+
 // 0x0fa8781a83e46826621b3bc094ea2a0212e71b23
 
 const getTokenAddresses = (tokens: string[]) => {
@@ -28,6 +36,17 @@ const getTokenAddresses = (tokens: string[]) => {
     );
   }
   return addresses;
+};
+
+const parseTokenDecimals = (tokens: string[]) => {
+  const values: string[] = [];
+
+  for (const token of tokens) {
+    values.push(
+      parseUnits(token, tokenDecimals[token.trim().toLowerCase()]).toString()
+    );
+  }
+  return values;
 };
 
 const getProtocolAddress = (protocol: string) => {
@@ -192,7 +211,7 @@ export const prepareParams = async (
     if (input.protocol == "UNISWAP") {
       const abiInterface = new Interface(UNISWAP_ROUTER_ABI);
       const _abiFunction = abiInterface.getFunction(input.functionName);
-      // console.log(_abiFunction);
+      console.log(_abiFunction);
 
       // convert to string
       abiFunction = JSON.stringify(_abiFunction);
@@ -227,6 +246,7 @@ export const prepareParams = async (
       // }
       // create the params acc to the function
       const deadline = Math.round(new Date().getTime() / 1000) + 86400;
+      const values: string[] = parseTokenDecimals(input.values);
       params = [
         {
           tokenIn: tokenAddresses[0],
@@ -234,7 +254,7 @@ export const prepareParams = async (
           fee: 3000,
           recipient: input.userAddress,
           deadline: deadline,
-          amountIn: input.values[0],
+          amountIn: values[0],
           amountOutMinimum: 0,
           sqrtPriceLimitX96: 0,
         },
