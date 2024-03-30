@@ -20,15 +20,57 @@ import { Separator } from "@/components/ui/separator";
 import moment from "moment";
 import { Badge } from "@/components/ui/badge";
 import { IntentType, getIntentData, requestIntent } from "@/utils/rollup";
-import { useAccount, usePublicClient, useWalletClient } from "wagmi";
+import { useAccount, useChains, usePublicClient, useWalletClient } from "wagmi";
+import { formatUnits } from "ethers";
 
-const messages = [
-  // { time: new Date(), text: "Executing your intent..." },
-  // { time: new Date(), text: "Sending transaction to Uniswap..." },
-  // { time: new Date(), text: "Fetching transaction preview..." },
-];
+export interface messageType {
+  time: Date;
+  text: string;
+}
+const messages: messageType[] = [];
+// { time: new Date(), text: "Executing your intent..." },
+// { time: new Date(), text: "Sending transaction to Uniswap..." },
+// { time: new Date(), text: "Fetching transaction preview..." },
+
+const UNISWAP_V3ROUTER_ADDRESS = "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45";
+const AAVE_LENDING_POOL_ADDRESS = "0xcC6114B983E4Ed2737E9BD3961c9924e6216c704";
+
+const tokenAddresses: { [token: string]: string } = {
+  "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE": "MATIC",
+  "0x0fa8781a83e46826621b3bc094ea2a0212e71b23": "USDC",
+  "0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889": "WMATIC",
+  "0xA6FA4fB5f76172d178d61B04b0ecd319C5d1C0aa": "WETH",
+  "0x1fdE0eCc619726f4cD597887C9F3b4c8740e19e2": "USDT",
+};
+
+const tokenDecimals: { [token: string]: number } = {
+  matic: 18,
+  usdc: 6,
+  wmatic: 18,
+  weth: 18,
+  usdt: 6,
+};
+
+const getTokenName = (tokens: string[]) => {
+  const addresses: string[] = [];
+  for (const token of tokens) {
+    addresses.push(tokenAddresses[token.trim()] || "Unknown address");
+  }
+  return addresses;
+};
+
+const getProtocolName = (protocolAddress: string) => {
+  if (protocolAddress == UNISWAP_V3ROUTER_ADDRESS) {
+    return "UNISWAP";
+  } else if (protocolAddress == AAVE_LENDING_POOL_ADDRESS) {
+    return "AAVE";
+  } else {
+    throw new Error("Invalid Protocol");
+  }
+};
 
 export default function AppPage() {
+  const network = useChains();
   const { address: account } = useAccount();
   const publicClient = usePublicClient();
   const { data: walletClient } = useWalletClient();
@@ -36,6 +78,9 @@ export default function AppPage() {
   const [intent, setIntent] = React.useState("");
   const [intentRequested, setIntentRequested] = useState<boolean>(false);
   const [intentRequestData, setIntentRequestData] = useState<IntentType>();
+  const [protocolName, setProtocolName] = useState<string>();
+  const [tokens, setTokens] = useState<string[]>();
+  const [value, setValue] = useState<string>();
   // const [intervalId, setIntervalId] = useState<number>();
   const [reqId, setReqId] = useState<number>();
 
@@ -50,7 +95,7 @@ export default function AppPage() {
       console.log(`Request created with Id: ${data?.requestId}`);
       setReqId(data?.requestId);
 
-      handleStartPoll();
+      handleStartPoll(data?.requestId);
       messages.push({
         time: new Date(),
         text: `Intent Request Created with Id: ${data?.requestId}`,
@@ -104,6 +149,7 @@ export default function AppPage() {
         });
 
         setIntentRequestData(intentData);
+        handleIntentData(intentData);
         console.log(new Date().toTimeString());
       } else {
         console.log("Intent Data Unavailable ");
@@ -111,6 +157,30 @@ export default function AppPage() {
     } catch (error) {
       console.log(error);
     }
+  };
+
+  const handleIntentData = async (intentData: IntentType) => {
+    // show the protocol name from the address
+    const protocolName = getProtocolName(intentData.protocolAddress.toString());
+    let tokenName: string[] = [];
+    let value: string = "";
+
+    // token Name from the token Address
+    if (protocolName == "UNISWAP") {
+      const params = intentData.params[0];
+      tokenName = getTokenName([params.tokenIn, params.tokenOut]);
+      value = formatUnits(params.amountIn, tokenDecimals[tokenName[0]]);
+    } else if (protocolName == "AAVE") {
+      const params = intentData.params[0];
+      tokenName = getTokenName([params]);
+      value = formatUnits(intentData.params[1], tokenDecimals[tokenName[0]]);
+    }
+
+    // extract the value
+    console.log(protocolName);
+    setProtocolName(protocolName);
+    setTokens(tokenName);
+    setValue(value);
   };
 
   const handleStopPoll = () => {
@@ -121,8 +191,9 @@ export default function AppPage() {
     }
   };
 
-  const handleStartPoll = () => {
-    const interval = setInterval(() => getIntentRequestData(1), 10000); // Poll every 5 minutes (300,000 milliseconds)
+  const handleStartPoll = (reqId: number) => {
+    getIntentRequestData(reqId);
+    const interval = setInterval(() => getIntentRequestData(reqId), 10000); // Poll every 5 minutes (300,000 milliseconds)
     console.log(interval);
     intervalId = interval;
   };
@@ -160,91 +231,100 @@ export default function AppPage() {
           <div>Fire my intent</div>
           <ChevronRightIcon className=" h-4 w-4" />{" "}
         </Button>
-        <Button
+        {/* <Button
           className="py-0 h-10 mb-0.5 flex items-center gap-2"
-          onClick={handleStartPoll}
+          onClick={() => handleStartPoll(reqId)}
         >
           <div>Fire my intent</div>
           <ChevronRightIcon className=" h-4 w-4" />{" "}
-        </Button>
+        </Button> */}
       </div>
       <div className=" w-full max-w-4xl space-y-3">
-        <div>Executing your intent</div>
+        {/* <div>Executing your intent</div> */}
 
-        <Card className="pt-8 pb-4 px-6 border-0">
-          <CardContent className=" space-y-4">
-            {messages.map((message, idx) => (
-              <div className=" flex items-start gap-3" key={idx}>
-                <div className=" w-40 text-neutral-600">
-                  {message.time.toLocaleTimeString()}
+        {messages && reqId && (
+          <Card className="pt-8 pb-4 px-6 border-0">
+            <CardContent className=" space-y-4">
+              {messages.map((message, idx) => (
+                <div className=" flex items-start gap-3" key={idx}>
+                  <div className=" w-40 text-neutral-600">
+                    {message.time.toLocaleTimeString()}
+                  </div>
+                  <div className=" animate-pulse">
+                    <TypeAnimation
+                      sequence={[message.text, 1000]}
+                      wrapper="span"
+                      cursor={true}
+                      repeat={Infinity}
+                    />
+                    {/* {message.text} */}
+                  </div>
                 </div>
-                <div className=" animate-pulse">
-                  <TypeAnimation
-                    sequence={[message.text, 1000]}
-                    wrapper="span"
-                    cursor={true}
-                    repeat={Infinity}
-                  />
-                  {/* {message.text} */}
-                </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+              ))}
+            </CardContent>
+          </Card>
+        )}
       </div>
 
-      <div className=" w-full max-w-4xl space-y-3">
-        <div>Transaction Details</div>
+      {intentRequestData && (
+        <div className=" w-full max-w-4xl space-y-3">
+          <div>Transaction Details</div>
 
-        <Card className="pt-8 pb-4 px-6 border-0">
-          <CardContent className=" space-y-4">
-            <div className=" flex items-start gap-3">
-              <div className=" w-40 text-neutral-600 font-semibold">
-                Protocol:
+          <Card className="pt-8 pb-4 px-6 border-0">
+            <CardContent className=" space-y-4">
+              <div className=" flex items-start gap-3">
+                <div className=" w-40 text-neutral-600 font-semibold">
+                  Protocol:
+                </div>
+                <div className="">{protocolName}</div>
               </div>
-              <div className="">Uniswap</div>
-            </div>
-            <div className=" flex items-start gap-3">
-              <div className=" w-40 text-neutral-600 font-semibold">
-                Protocol Address:
+              <div className=" flex items-start gap-3">
+                <div className=" w-40 text-neutral-600 font-semibold">
+                  Protocol Address:
+                </div>
+                <div className="">
+                  {intentRequestData.protocolAddress.toString()}
+                </div>
               </div>
-              <div className="">0x2f5ad7a3bb2f5ad7a3bb2f5ad7a3bb2f5ad7a3bb</div>
-            </div>
-            <div className=" flex items-start gap-3">
-              <div className=" w-40 text-neutral-600 font-semibold">
-                Tokens:
+              <div className=" flex items-start gap-3">
+                <div className=" w-40 text-neutral-600 font-semibold">
+                  Tokens:
+                </div>
+                <div className="flex items-center gap-2">
+                  {tokens?.map((token) => {
+                    return (
+                      <Badge
+                        variant={"secondary"}
+                        className=" border border-neutral-500"
+                      >
+                        {token}
+                      </Badge>
+                    );
+                  })}
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Badge
-                  variant={"secondary"}
-                  className=" border border-neutral-500"
-                >
-                  Matic
-                </Badge>
-                <Badge
-                  variant={"secondary"}
-                  className=" border border-neutral-500"
-                >
-                  USDC
-                </Badge>
+              <div className=" flex items-start gap-3">
+                <div className=" w-40 text-neutral-600 font-semibold">
+                  Value:
+                </div>
+                <div>{value}</div>
               </div>
-            </div>
-            <div className=" flex items-start gap-3">
-              <div className=" w-40 text-neutral-600 font-semibold">Value:</div>
-              <div>$ 100</div>
-            </div>
-            <div className=" flex items-start gap-3">
-              <div className=" w-40 text-neutral-600 font-semibold">Chain:</div>
-              <div>Sepolia</div>
-            </div>
-          </CardContent>
-          <CardFooter>
-            <Button variant={"default"} className=" w-full mt-4">
-              Execute Transaction
-            </Button>
-          </CardFooter>
-        </Card>
-      </div>
+              <div className=" flex items-start gap-3">
+                <div className=" w-40 text-neutral-600 font-semibold">
+                  Chain:
+                </div>
+                <div>{publicClient?.chain.name}</div>
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Button variant={"default"} className=" w-full mt-4">
+                Execute Transaction
+              </Button>
+            </CardFooter>
+          </Card>
+        </div>
+      )}
+
       <div className=" w-full max-w-4xl space-y-3">
         <div>Intent Suggestions</div>
         <IntentSuggestions setIntent={setIntent} />
