@@ -1,4 +1,7 @@
 import { AddressLike, Wallet } from "ethers";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const domain = {
   name: "Stackr MVP v0",
@@ -37,11 +40,12 @@ export const requestIntent = async (requestData: {
 
   try {
     const response = await fetch(
-      `${process.env.ROLLUP_HOST}/getEIP712Types/${actionName}`
+      `http://localhost:5050/getEIP712Types/${actionName}`
     );
+    // console.log(response);
 
     const eip712Types = (await response.json()).eip712Types;
-    // console.log(eip712Types);
+    console.log(eip712Types);
     // const date = new Date();
 
     const res2 = await fetch(`http://localhost:5050/`);
@@ -62,7 +66,7 @@ export const requestIntent = async (requestData: {
       payload,
     });
 
-    const res = await fetch(`${process.env.ROLLUP_HOST}/${actionName}`, {
+    const res = await fetch(`http://localhost:5050/${actionName}`, {
       method: "POST",
       body,
       headers: {
@@ -96,11 +100,12 @@ export const getIntentData = async (
   reqId: number
 ): Promise<IntentType | undefined> => {
   try {
-    const res = await fetch(`${process.env.ROLLUP_HOST}/intent/${reqId}`);
+    const res = await fetch(`http://localhost:5050/intent/${reqId}`);
 
     const json = await res.json();
     console.log(json);
-    return json;
+    const data = json.intentRequest;
+    return data;
   } catch (error) {
     console.log(error);
   }
@@ -126,7 +131,7 @@ export const solveIntent = async (solveIntentData: SolveIntentType) => {
 
   try {
     const response = await fetch(
-      `${process.env.ROLLUP_HOST}/getEIP712Types/${actionName}`
+      `http://localhost:5050/getEIP712Types/${actionName}`
     );
 
     const eip712Types = (await response.json()).eip712Types;
@@ -149,7 +154,7 @@ export const solveIntent = async (solveIntentData: SolveIntentType) => {
       payload,
     });
 
-    const res = await fetch(`${process.env.ROLLUP_HOST}/${actionName}`, {
+    const res = await fetch(`http://localhost:5050/${actionName}`, {
       method: "POST",
       body,
       headers: {

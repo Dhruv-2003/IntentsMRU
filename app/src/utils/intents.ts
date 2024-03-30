@@ -118,9 +118,9 @@ export const getGptCompletion = async (
     protocol:AAVE
     tokens:[USDT]
     function:repay(_asset, _amount, _rateMode, _onBehalfOf)
-    values:[0.0001]
+    values:[0.0001] 
     
-    Don't add anything else in the format , just give me protocol , tokens , functions & values in the mentioned format and nothing else in the whole response. Don't prefix or suffix anything else
+    Don't prefix or suffix anything else. Don't add anything in the response from your side : the regex format for the response should be protocol:\s*(\w+)\s*tokens:\s*\[(\w+),\s*(\w+)\]\s*function:\s*(\w+)\((.*?)\)\s*values:\s*\[(\d+(\.\d+)?)\]
     `;
 
   // We currently only offer the following protocol and their respective functions.
@@ -145,6 +145,7 @@ export const getGptCompletion = async (
   if (answer && answer.content) {
     commandArray = answer.content.split("\n");
     // commandArray = commandArray.slice(2);
+    // console.log(commandArray);
 
     const protocolPart = commandArray[0];
     const protocol = protocolPart.split(":")[1].trim();

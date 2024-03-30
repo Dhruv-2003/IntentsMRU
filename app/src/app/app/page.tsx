@@ -11,7 +11,7 @@ import {
   XCircle,
   XSquareIcon,
 } from "lucide-react";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import IntentSuggestions from "./intent-suggestions";
 import Link from "next/link";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -19,15 +19,119 @@ import { TypeAnimation } from "react-type-animation";
 import { Separator } from "@/components/ui/separator";
 import moment from "moment";
 import { Badge } from "@/components/ui/badge";
+import { IntentType, getIntentData, requestIntent } from "@/utils/rollup";
+import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 
 const messages = [
-  { time: new Date(), text: "Executing your intent..." },
-  { time: new Date(), text: "Sending transaction to Uniswap..." },
-  { time: new Date(), text: "Fetching transaction preview..." },
+  // { time: new Date(), text: "Executing your intent..." },
+  // { time: new Date(), text: "Sending transaction to Uniswap..." },
+  // { time: new Date(), text: "Fetching transaction preview..." },
 ];
 
 export default function AppPage() {
+  const { address: account } = useAccount();
+  const publicClient = usePublicClient();
+  const { data: walletClient } = useWalletClient();
+
   const [intent, setIntent] = React.useState("");
+  const [intentRequested, setIntentRequested] = useState<boolean>(false);
+  const [intentRequestData, setIntentRequestData] = useState<IntentType>();
+  // const [intervalId, setIntervalId] = useState<number>();
+  const [reqId, setReqId] = useState<number>();
+
+  let intervalId: any = 0;
+
+  const requestIntentRollup = async () => {
+    try {
+      const data = await requestIntent({
+        userAddress: account as string,
+        intent: intent,
+      });
+      console.log(`Request created with Id: ${data?.requestId}`);
+      setReqId(data?.requestId);
+
+      handleStartPoll();
+      messages.push({
+        time: new Date(),
+        text: `Intent Request Created with Id: ${data?.requestId}`,
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const getIntentRequestData = async (reqId: number) => {
+    try {
+      console.log("Polling the intent request Data ...");
+      if (!reqId) {
+        console.log("No reqId found");
+        return;
+      }
+      const intentData = await getIntentData(reqId);
+      // check the current State
+
+      // If the solver data isn't present , then show "Request Sent to the Solver Market MRU"
+      if (intentData?.functionName == "") {
+        console.log("Request Sent to the Solver Market MRU...");
+        messages.push({
+          time: new Date(),
+          text: "Request Sent to the Solver Market MRU...",
+        });
+
+        console.log("Waiting for the Solver to solve it ...");
+        messages.push({
+          time: new Date(),
+          text: "Waiting for the Solver to solve it ...",
+        });
+
+        console.log(new Date());
+      } else if (
+        intentData?.functionName != "" &&
+        intentData?.functionName != undefined
+      ) {
+        handleStopPoll();
+        // If the solver data is present , then show "Intent solving completed ..."
+        console.log("Intent solving completed by the solver...");
+        messages.push({
+          time: new Date(),
+          text: "Intent solving completed by the solver...",
+        });
+
+        console.log("MRU constructed the txData successfully ...");
+        messages.push({
+          time: new Date(),
+          text: "MRU constructed the txData successfully ...",
+        });
+
+        setIntentRequestData(intentData);
+        console.log(new Date().toTimeString());
+      } else {
+        console.log("Intent Data Unavailable ");
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleStopPoll = () => {
+    console.log(intervalId);
+    if (intervalId) {
+      clearInterval(intervalId);
+      console.log("Stop polling");
+    }
+  };
+
+  const handleStartPoll = () => {
+    const interval = setInterval(() => getIntentRequestData(1), 10000); // Poll every 5 minutes (300,000 milliseconds)
+    console.log(interval);
+    intervalId = interval;
+  };
+
+  const executeTx = () => {
+    // determine the type of Tx
+    // If needed approval in case of token swap , etc , perform that
+    // Then execute the Tx brought from MRU
+  };
 
   return (
     <div className=" flex items-center flex-col gap-8 justify-start min-h-[90vh] bg-gradient-to-b from-purple-400/40 via-violet-500/40 to-indigo-600/40 py-20 max-w-7xl mx-auto rounded-xl">
@@ -49,7 +153,17 @@ export default function AppPage() {
             )}
           </div>
         </Label>
-        <Button className="py-0 h-10 mb-0.5 flex items-center gap-2">
+        <Button
+          className="py-0 h-10 mb-0.5 flex items-center gap-2"
+          onClick={requestIntentRollup}
+        >
+          <div>Fire my intent</div>
+          <ChevronRightIcon className=" h-4 w-4" />{" "}
+        </Button>
+        <Button
+          className="py-0 h-10 mb-0.5 flex items-center gap-2"
+          onClick={handleStartPoll}
+        >
           <div>Fire my intent</div>
           <ChevronRightIcon className=" h-4 w-4" />{" "}
         </Button>
@@ -137,34 +251,4 @@ export default function AppPage() {
       </div>
     </div>
   );
-}
-
-{
-  /* <TypeAnimation
-                sequence={[
-                  "Lorem ipsum dolor sit, amet consectetur adipisicing elit. Minus, mollitia recusandae? Consequatur accusamus assumenda quos officia nostrum! Nam veniam itaque, explicabo velit, error iure impedit totam et fuga, debitis est!",
-                  1000,
-                  // () => {
-                  //   console.log("Sequence completed");
-                  // },
-                ]}
-                wrapper="span"
-                cursor={true}
-                repeat={Infinity}
-              /> */
-}
-
-{
-  /* export type IntentType = {
-  requestId: number;
-  userAddress: AddressLike;
-  solverAddress: AddressLike;
-  intent: string;
-  params: any[]; // in format [param1 , param2]
-  ABIFunction: string; // in format "function name(uint param1, bytes param2)"
-  functionName: string; // function Name for interface
-  protocolAddress: AddressLike; // to address
-  txValue: number; // in ethers format
-  solvedTxData: {}; // { to: ,  data: , value:  }
-}; */
 }

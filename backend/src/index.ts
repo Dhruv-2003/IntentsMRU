@@ -52,25 +52,25 @@ async function pollEndpoint() {
       intent: intentRequest.intent,
       userAddress: intentRequest.userAddress,
     });
+    console.log(body);
+
+    const data = await fetch("http://localhost:3000/api/intents", {
+      method: "POST",
+      body,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    console.log(data);
 
     console.log("Solving the Intent ...");
-
-    // const data = await fetch("/api/intents", {
-    //   method: "POST",
-    //   body,
-    //   headers: {
-    //     "Content-Type": "application/json",
-    //   },
-    // });
-
-    // console.log(`Intent Solved & Stored in MRU ${await data.json()}`);
   });
 }
 
 // Poll the endpoint every 5 minutes (300,000 milliseconds)
 function main() {
   try {
-    const interval = setInterval(pollEndpoint, 5000);
+    const interval = setInterval(pollEndpoint, 10000);
   } catch (error) {
     console.log(error);
   }
