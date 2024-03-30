@@ -9,6 +9,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import Features from "./features";
 import { XIcon } from "lucide-react";
+import FlowModal from "./flow-modal";
 
 export default function Home() {
   const performAPICall = async () => {
@@ -44,7 +45,7 @@ export default function Home() {
               and our network of solvers will turn your words into code that
               executes seamlessly on-chain.
             </p>
-            <Button onClick={performAPICall}>Call</Button>
+            {/* <Button onClick={performAPICall}>Call</Button> */}
 
             <Link
               href={"/app"}
@@ -58,11 +59,12 @@ export default function Home() {
               className=" w-64 h-20 object-cover -z-10 -mt-6 animate-pulse"
             />
           </div>
-          <Image
+          <FlowModal />
+          {/* <Image
             src={flow}
             alt="product flow"
             className="rounded-md max-w-2xl mx-auto border border-transparent shadow-2xl p-2  animate-border inline-block bg-white  bg-[length:400%_400%] bg-gradient-to-r to-purple-400/80 via-violet-500/60 from-indigo-600/60 -mt-6"
-          />
+          /> */}
           <div className=" space-y-5 mt-16">
             <div className=" text-base font-semibold text-center">
               Powered By
