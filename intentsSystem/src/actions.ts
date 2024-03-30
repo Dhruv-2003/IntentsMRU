@@ -1,14 +1,5 @@
 import { ActionSchema, SolidityType } from "@stackr/sdk";
 
-// utility function to create a transfer schema
-function generateSchemaFromBase(name: string) {
-  return new ActionSchema(name, {
-    to: SolidityType.ADDRESS,
-    from: SolidityType.ADDRESS,
-    amount: SolidityType.UINT,
-  });
-}
-
 // createAccountSchema is a schema for creating an account
 export const registerSolverSchema = new ActionSchema("register", {
   address: SolidityType.ADDRESS,
@@ -25,6 +16,7 @@ export const solveInentSchema = new ActionSchema("solve", {
   solverAddress: SolidityType.ADDRESS,
   params: SolidityType.STRING,
   abiFunction: SolidityType.STRING,
+  functionName: SolidityType.STRING,
   protocolAddress: SolidityType.ADDRESS,
   txValue: SolidityType.UINT,
 });

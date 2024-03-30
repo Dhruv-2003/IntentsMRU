@@ -1,6 +1,6 @@
 import { Reducers, STF } from "@stackr/sdk/machine";
 import { SolverMarket, SolverMarketTransport as StateWrapper } from "./state";
-import { AddressLike, Interface, parseEther } from "ethers";
+import { AddressLike, Interface, ZeroAddress, parseEther } from "ethers";
 
 // --------- Utilities ---------
 const findIndexOfIntent = (state: StateWrapper, requestId: number) => {
@@ -42,12 +42,25 @@ const registerHandler: STF<SolverMarket, RegisterType> = {
 const requestHandler: STF<SolverMarket, RequestType> = {
   handler: ({ inputs, state }) => {
     const { requestId, userAddress, intent } = inputs;
+
     if (state.intents.find((intent) => intent.requestId === requestId)) {
       throw new Error("Request already exists");
     }
-    state.intents[requestId].requestId = requestId;
-    state.intents[requestId].intent = intent;
-    state.intents[requestId].userAddress = userAddress;
+
+    state.intents.push({
+      requestId: requestId,
+      userAddress: userAddress,
+      solverAddress: ZeroAddress,
+      intent: intent,
+      params: [],
+      ABIFunction: "",
+      functionName: "",
+      protocolAddress: ZeroAddress,
+      txValue: 0,
+      solvedTxData: {},
+    });
+
+    state.totalRequests += 1;
 
     return state;
   },
@@ -64,15 +77,24 @@ const solveHandler: STF<SolverMarket, SolveType> = {
       protocolAddress,
       txValue,
     } = inputs;
+
     if (!state.intents.find((intent) => intent.requestId === requestId)) {
       throw new Error("Request doesn't exists");
     }
-    state.intents[requestId].solverAddress = solverAddress;
-    state.intents[requestId].params = JSON.parse(params) as any[];
-    state.intents[requestId].ABIFunction = abiFunction;
-    state.intents[requestId].functionName = functionName;
-    state.intents[requestId].protocolAddress = protocolAddress;
-    state.intents[requestId].txValue = txValue;
+
+    //TODO: Check is a solver is calling
+    if (!state.solvers.find((solver) => solver === msgSender)) {
+      throw new Error("Only solver can solve intents");
+    }
+
+    const reqIndex = findIndexOfIntent(state, requestId);
+    console.log(reqIndex);
+    state.intents[reqIndex].solverAddress = solverAddress;
+    state.intents[reqIndex].params = JSON.parse(params) as any[];
+    state.intents[reqIndex].ABIFunction = abiFunction;
+    state.intents[reqIndex].functionName = functionName;
+    state.intents[reqIndex].protocolAddress = protocolAddress;
+    state.intents[reqIndex].txValue = txValue;
 
     // actually solve the intent
     const txData = createTxData({
@@ -82,11 +104,12 @@ const solveHandler: STF<SolverMarket, SolveType> = {
       protocolAddress: protocolAddress,
       txValue: txValue,
     });
+    console.log(txData);
 
     // TODO: check restriction in terms of the protocol we are using, so the protocol addres is correct
     // Function even exists for that protocol in the config
 
-    state.intents[requestId].solvedTxData = JSON.stringify(txData);
+    state.intents[reqIndex].solvedTxData = JSON.stringify(txData);
 
     return state;
   },

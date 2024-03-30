@@ -4,7 +4,7 @@ import { expect } from "chai";
 import { Wallet } from "ethers";
 import genesisState from "../genesis-state.json";
 import { createAccountSchema, schemas } from "../src/actions.ts";
-import { ERC20Machine } from "../src/erc20.ts";
+import { ERC20Machine } from "../src/solver.ts";
 import { reducers } from "../src/reducers.ts";
 import { ERC20 } from "../src/state.ts";
 import { stackrConfig } from "../stackr.config.ts";
