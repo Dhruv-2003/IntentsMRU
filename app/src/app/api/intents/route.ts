@@ -12,10 +12,11 @@ export async function POST(request: NextRequest) {
       await body;
 
     console.log(requestId, intent);
+
     // Process the intent and call Open AI to solve them and return back the params
+    await getGptCompletion(intent);
 
     // Prepare the param call to fulfill the request
-    await getGptCompletion(intent);
 
     // Submit the request
 

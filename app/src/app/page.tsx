@@ -11,7 +11,7 @@ export default function Home() {
     try {
       const body = JSON.stringify({
         requestId: 1,
-        intent: "I want to bridge WETH for 0.00001USDC",
+        intent: "I want to swap WMATIC for 0.00001USDC",
       });
       const data = await fetch("/api/intents", {
         method: "POST",

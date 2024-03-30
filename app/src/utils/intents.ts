@@ -1,4 +1,4 @@
-import { ethers } from "ethers";
+import { Interface, ethers } from "ethers";
 import OpenAI from "openai";
 import {
   ERC20_ABI,
@@ -7,23 +7,37 @@ import {
   AAVE_LENDING_POOL_ABI,
 } from "@/constants";
 
-const UNISWAP_V3ROUTER_ADDRESS = "0x3bFA4769FB09eefC5a80d6E87c3B9C650f7Ae48E";
-const AAVE_LENDING_POOL_ADDRESS = "0x6Ae43d3271ff6888e7Fc43Fd7321a503ff738951";
+const UNISWAP_V3ROUTER_ADDRESS = "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45";
+const AAVE_LENDING_POOL_ADDRESS = "0xcC6114B983E4Ed2737E9BD3961c9924e6216c704";
 
 const tokenAddresses: { [token: string]: string } = {
-  usdc: "0x2058A9D7613eEE744279e3856Ef0eAda5FCbaA7e",
+  matic: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+  usdc: "0x0fa8781a83e46826621b3bc094ea2a0212e71b23",
   wmatic: "0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889",
-  usdt: "0xAcDe43b9E5f72a4F554D4346e69e8e7AC8F352f0",
+  weth: "0xA6FA4fB5f76172d178d61B04b0ecd319C5d1C0aa",
+  usdt: "0x1fdE0eCc619726f4cD597887C9F3b4c8740e19e2",
 };
 
-// const getTokenAddresses = (tokens: string[]) => {
-//   const addresses: any = {};
-//   for (const token of tokens) {
-//     addresses[token] =
-//       tokenAddresses[token.trim().toLowerCase()] || "Unknown address";
-//   }
-//   return addresses;
-// };
+// 0x0fa8781a83e46826621b3bc094ea2a0212e71b23
+
+const getTokenAddresses = (tokens: string[]) => {
+  const addresses: any = {};
+  for (const token of tokens) {
+    addresses[token] =
+      tokenAddresses[token.trim().toLowerCase()] || "Unknown address";
+  }
+  return addresses;
+};
+
+const getProtocolAddress = (protocol: string) => {
+  if (protocol == "UNISWAP") {
+    return UNISWAP_V3ROUTER_ADDRESS;
+  } else if (protocol == "AAVE") {
+    return AAVE_LENDING_POOL_ADDRESS;
+  } else {
+    throw new Error("Invalid Protocol");
+  }
+};
 
 // const sendTransaction = async (
 //   protocol: any,
@@ -127,36 +141,26 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY as string,
 });
 
-export const getGptCompletion = async (intentMsg: string) => {
-  let txHash = "";
+export interface GPTOutput {
+  protocol: string;
+  functionName: string;
+  tokens: string[];
+  values: string[];
+}
 
+export const getGptCompletion = async (
+  intentMsg: string
+): Promise<GPTOutput | undefined> => {
   const command = intentMsg;
   console.log("Command : ", command);
-  const prompt = `Extract the tokens involved, protocol, parameters and their values in one line from the following command:${command}.Assume any suitable protocol like  Uniswap, AAVE, etc when not mentioned and from the protocols code, figure out which function is being executed
-    Return the response in the following format-protocol:{{protocol}}\ntokens:[token1, token2, ..etc]\nfunction:{{function(param1, param2, ..etc)}}\nvalues:[value1,value2,etc]
+
+  const prompt = `Extract the tokens involved, protocol, parameters and their values in one line from the following command:${command}.Assume any suitable protocol like  UNISWAP, AAVE, etc when not mentioned and from the protocols code, figure out which function is being executed
+    Return the response strictly in the following format - protocol:{{protocol}}\ntokens:[token1, token2, ..etc]\nfunction:{{function(param1, param2, ..etc)}}\nvalues:[value1,value2,etc]
 
     For example for the intent : I want to swap WMATIC for 0.00001USDC, the response would be strictly in the following format:
-    protocol:Uniswap
+    protocol:UNISWAP
     tokens:[WMATIC, USDC]
-    functionName:exactInputSingle
-    values:[0.0001]
-
-    For example for the intent : I want to swap 0.00001WMATIC for USDC, the response would be strictly in the following format:
-    protocol:Uniswap
-    tokens:[WMATIC, USDC]
-    functionName:exactOutputSingle
-    values:[0.0001]
-
-    For example for the intent : I want to lend/deposit 0.00001 USDT on AAVE, the response would be strictly in the following format:
-    protocol:AAVE
-    tokens:[USDT]
-    functionName:deposit
-    values:[0.0001]
-
-    For example for the intent : I want to withdraw 0.00001 USDT from AAVE, the response would be strictly in the following format:
-    protocol:AAVE
-    tokens:[USDT]
-    function:withdraw
+    function:exactInputSingle(struct ISwapRouter.ExactInputSingleParams params)
     values:[0.0001]
 
     For example for the intent : I want to borrow 0.00001 USDT, the response would be strictly in the following format:
@@ -170,14 +174,16 @@ export const getGptCompletion = async (intentMsg: string) => {
     tokens:[USDT]
     function:repay(_asset, _amount, _rateMode, _onBehalfOf)
     values:[0.0001]
-
-    We currently only offer the following protocol and their respective functions.
     
-    - UNISWAP : to swap tokens on Sepolia chain , the functions available are exactInputSingle , exactOutputSingle
-    - AAVE :to lend , withdraw , borrow and repay tokens in the AAVE pools on Sepolia Chain, the functions available are deposit , withdraw, borrow & repay
-
-    If the user demand for any other protocol or action , you can return back with the response that the request can't be fulfilled
+    Don't add anything else in the format , just give me protocol , tokens , functions & values in the mentioned format
     `;
+
+  // We currently only offer the following protocol and their respective functions.
+
+  // - UNISWAP : to swap tokens on Sepolia chain , the functions available are exactInputSingle , exactOutputSingle
+  // - AAVE :to lend , withdraw , borrow and repay tokens in the AAVE pools on Sepolia Chain, the functions available are deposit , withdraw, borrow & repay
+
+  // If the user demand for any other protocol or action , you can return back with the response that the request can't be fulfilled
 
   const completion = await openai.chat.completions.create({
     model: "gpt-3.5-turbo",
@@ -217,33 +223,122 @@ export const getGptCompletion = async (intentMsg: string) => {
     const valuesArray = valuesString.split(",").map((value) => value.trim());
     console.log("Values : ", valuesArray);
 
-    // const addresses = getTokenAddresses(tokensArray);
-    // console.log("Addresses : ", addresses);
-    // console.log(addresses[tokensArray[0]]);
+    const data: GPTOutput = {
+      protocol: protocol,
+      functionName: func_name,
+      tokens: tokensArray,
+      values: valuesArray,
+    };
 
-    // const data = { protocol, func_name, tokensArray, valuesArray, addresses };
+    return data;
   }
 };
 
-// // getGptCompletion("I want to repay 0.00001 USDT")
-// // getGptCompletion("I want to swap WMATIC for 0.00001 USDC")
+export interface ParamsInput {
+  protocol: string;
+  functionName: string;
+  tokens: string[];
+  values: string[];
+  userAddress: string;
+}
 
-// app.post("/completion", async (req: any, res: any) => {
-//   console.log(req.body.body);
-//   const message = req.body.body;
-//   try {
-//     const response = await getGptCompletion(message);
-//     console.log(response);
-//     res.json(response);
-//   } catch (error) {
-//     console.error(error);
-//     res
-//       .status(500)
-//       .send({ error: "An error occurred while processing your request." });
-//   }
-// });
+export interface ParamsOutput {
+  protocolAddress: string;
+  params: any[];
+  abiFunction: string;
+  functionName: string;
+  txValue: number;
+}
 
-// const port = process.env.PORT || 8000;
-// app.listen(port, () =>
-//   console.log(`Server running on http://localhost:${port}`)
-// );
+export const prepareParams = async (
+  input: ParamsInput
+): Promise<ParamsOutput | undefined> => {
+  try {
+    try {
+      // convert protocol Name into protocol address
+      const protocolAddress = getProtocolAddress(input.protocol);
+      console.log(protocolAddress);
+
+      let abiFunction: string;
+      let params: any[] = [];
+      // create the functionABI , get the functionABI
+      if (input.protocol == "UNISWAP") {
+        const abiInterface = new Interface(UNISWAP_ROUTER_ABI);
+        const _abiFunction = abiInterface.getFunction(input.functionName);
+        console.log(_abiFunction);
+
+        // convert to string
+        abiFunction = JSON.stringify(_abiFunction);
+        console.log(abiFunction);
+      } else if (input.protocol == "AAVE") {
+        const abiInterface = new Interface(AAVE_LENDING_POOL_ABI);
+        const _abiFunction = abiInterface.getFunction(input.functionName);
+        console.log(_abiFunction);
+
+        // convert to string
+        abiFunction = JSON.stringify(_abiFunction);
+        console.log(abiFunction);
+      } else {
+        throw new Error("Invalid Protocol");
+      }
+
+      // prepare the params from tokens and value depending on the protocol
+      const tokenAddresses = getTokenAddresses(input.tokens);
+      // console.log("Addresses : ", addresses);
+      // console.log(addresses[tokensArray[0]]);
+
+      if (input.protocol == "UNISWAP") {
+        //     struct ExactInputSingleParams {
+        //     address tokenIn;
+        //     address tokenOut;
+        //     uint24 fee;
+        //     address recipient;
+        //     uint256 deadline;
+        //     uint256 amountIn;
+        //     uint256 amountOutMinimum;
+        //     uint160 sqrtPriceLimitX96;
+        // }
+        // create the params acc to the function
+        const deadline = Math.round(new Date().getTime() / 1000) + 86400;
+        params = [
+          {
+            tokenIn: tokenAddresses[0],
+            tokenOut: tokenAddresses[1],
+            fee: 3000,
+            recipient: input.userAddress,
+            deadline: deadline,
+            amountIn: input.values[0],
+            amountOutMinimum: 0,
+            sqrtPriceLimitX96: 0,
+          },
+        ];
+      } else if (input.protocol == "AAVE") {
+        // create the params acc to the function
+        if (input.functionName == "borrow") {
+          params = [
+            tokenAddresses[0],
+            input.values[0],
+            1,
+            0,
+            input.userAddress,
+          ];
+        } else if (input.functionName == "repay") {
+          params = [tokenAddresses[0], input.values[0], 1, input.userAddress];
+        }
+      }
+
+      const data: ParamsOutput = {
+        protocolAddress: protocolAddress,
+        functionName: input.functionName,
+        abiFunction: abiFunction,
+        params: params,
+        txValue: 0,
+      };
+      // txValue if needed
+    } catch (error) {
+      console.log(error);
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
