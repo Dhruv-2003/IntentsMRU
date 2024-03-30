@@ -39,104 +39,6 @@ const getProtocolAddress = (protocol: string) => {
   }
 };
 
-// const sendTransaction = async (
-//   protocol: any,
-//   func: any,
-//   tokensArray: any,
-//   valuesArray: any,
-//   addresses: any
-// ) => {
-//   if (protocol == "Sushiswap" || protocol == "Uniswap") {
-//     const router = new ethers.Contract(
-//       SUSHISWAP_ROUTER_ADDRESS,
-//       SUSHISWAP_ROUTER_ABI,
-//       wallet
-//     );
-//     const wmaticContract = new ethers.Contract(
-//       addresses[tokensArray[0]],
-//       ERC20_ABI,
-//       wallet
-//     );
-
-//     // Define the trade parameters
-//     const amountString = valuesArray[0];
-//     const amountIn = ethers.utils.parseEther("0.001"); // Spend 0.001 WMATIC
-//     const amountOutMin = ethers.utils.parseUnits(amountString, 6); // Get at least 100 USDC tokens
-//     const path = [addresses[tokensArray[0]], addresses[tokensArray[1]]]; // Swap route
-//     const deadline = Math.floor(Date.now() / 1000) + 60 * 20; // 20 minutes from the current Unix time
-//     const to = wallet.address; // Wallet address to receive USDC
-
-//     // Approve the Router contract to spend WMATIC
-//     const approveTx = await wmaticContract.approve(
-//       SUSHISWAP_ROUTER_ADDRESS,
-//       amountIn
-//     );
-//     await approveTx.wait();
-
-//     // Make the swap
-//     const swapFunction = router[func];
-//     const tx = await swapFunction(amountIn, amountOutMin, path, to, deadline);
-
-//     console.log("Transaction hash: " + tx.hash);
-
-//     // Wait for the transaction to be mined
-//     await tx.wait();
-
-//     console.log("Swap executed successfully!");
-
-//     return tx.hash;
-//   } else if (protocol == "AAVE") {
-//     const usdtDecimal = 6; // USDC has 6 decimals
-//     const amountString = valuesArray[0];
-//     const amount = ethers.utils.parseUnits(amountString, usdtDecimal);
-//     const lendingPoolContract = new ethers.Contract(
-//       AAVE_LENDING_POOL_ADDRESS,
-//       AAVE_LENDING_POOL_ABI,
-//       wallet
-//     );
-//     const aaveFunction = lendingPoolContract[func];
-
-//     let tx: any;
-
-//     if (func == "repay") {
-//       const usdtContract = new ethers.Contract(
-//         addresses[tokensArray[0]],
-//         ERC20_ABI,
-//         wallet
-//       );
-//       const approveTx = await usdtContract.approve(
-//         AAVE_LENDING_POOL_ADDRESS,
-//         amount
-//       );
-//       await approveTx.wait(); // Wait for approval to be mined
-//       tx = await aaveFunction(
-//         addresses[tokensArray[0]],
-//         amount,
-//         2, // 1 for Stable, 2 for Variable rate. Here we are selecting Variable rate.
-//         wallet.address
-//       );
-//     } else if (func == "borrow") {
-//       tx = await aaveFunction(
-//         addresses[tokensArray[0]],
-//         amount,
-//         2, // 1 for Stable, 2 for Variable rate. Here we are selecting Variable rate.
-//         0, // referral code
-//         wallet.address
-//       );
-//     }
-
-//     console.log(`Transaction hash: ${tx.hash}`);
-
-//     const receipt = await tx.wait();
-//     console.log(
-//       `Transaction confirmed in block number: ${receipt.blockNumber}`
-//     );
-//     console.log(`${func} executed successful`);
-
-//     return tx.hash;
-//   }
-// };
-
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY as string,
 });
@@ -334,6 +236,8 @@ export const prepareParams = async (
         params: params,
         txValue: 0,
       };
+
+      return data;
       // txValue if needed
     } catch (error) {
       console.log(error);
