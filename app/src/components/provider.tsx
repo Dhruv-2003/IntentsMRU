@@ -17,7 +17,7 @@ import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 const config = getDefaultConfig({
   appName: "Discovery Donar",
   projectId: "afdac16b07284976cc7f71299771b2b7",
-  chains: [sepolia, baseSepolia],
+  chains: [polygonMumbai, sepolia, baseSepolia],
 });
 
 const queryClient = new QueryClient();
