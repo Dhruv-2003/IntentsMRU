@@ -6,8 +6,17 @@
 
 
 html {
-    background-color: rgb(242, 240, 249);
+    /* background-color: rgb(242, 240, 249); */
+    background-color: rgb(242, 242, 242);
     font-family: "Figtree", sans-serif;
+}
+
+
+
+.backgrnd-pattern {
+    background-image: url("../assets/pattern2.webp");
+    background-size: contain;
+    background-repeat: no-repeat;
 }
 
 .hind-siliguri-light {

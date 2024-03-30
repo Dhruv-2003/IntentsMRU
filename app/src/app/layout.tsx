@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import Provider from "@/components/provider";
 import { Toaster } from "@/components/ui/sonner";
 import Link from "next/link";
+import Footer from "@/components/footer";
 
 const basier = local({
   src: [
@@ -30,10 +31,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={cn("max-w-7x mx-auto")}>
+      <body className={cn("max-w-7x mx-auto relative")}>
         <Provider>
           <Navbar />
           <div>{children}</div>
+          <div>
+            <Footer />
+          </div>
         </Provider>
         <Toaster richColors />
       </body>

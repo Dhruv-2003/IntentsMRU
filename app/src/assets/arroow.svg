@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink"
+    xmlns:svgjs="http://svgjs.dev/svgjs" viewBox="0 0 800 800">
+    <g stroke-width="7" stroke="hsl(0, 0%, 30%)" fill="none" stroke-linecap="round"
+        stroke-linejoin="round" stroke-dasharray="21 25" transform="rotate(319, 400, 400)">
+        <path d="M156.5 156.5Q523.5 416.5 400 400Q217.5 369.5 643.5 643.5 "
+            marker-end="url(#SvgjsMarker1747)"></path>
+    </g>
+    <defs>
+        <marker markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" viewBox="0 0 5 5"
+            orient="auto" id="SvgjsMarker1747">
+            <polygon points="0,5 1.6666666666666667,2.5 0,0 5,2.5" fill="hsl(0, 0%, 30%)"></polygon>
+        </marker>
+    </defs>
+</svg>
