@@ -5,23 +5,66 @@ import axios from "axios";
 // const app = express();
 // app.use(express.json());
 
-const endpointUrl = "https://example.com/your-endpoint";
+import dotenv from "dotenv";
+import { AddressLike } from "ethers";
+dotenv.config();
 
-function pollEndpoint() {
+const endpointUrl = process.env.ROLLUP_HOST;
+
+if (!endpointUrl) {
+  throw new Error("No endpoint found !!");
+}
+
+export type IntentType = {
+  requestId: number;
+  userAddress: AddressLike;
+  solverAddress: AddressLike;
+  intent: string;
+  params: any[]; // in format [param1 , param2]
+  ABIFunction: string; // in format "function name(uint param1, bytes param2)"
+  functionName: string; // function Name for interface
+  protocolAddress: AddressLike; // to address
+  txValue: number; // in ethers format
+  solvedTxData: {}; // { to: ,  data: , value:  }
+};
+
+async function pollEndpoint() {
   // get the rollup state
+  const res = await fetch(`${endpointUrl}`);
+  const state = (await res.json()).state;
+
+  console.log(state);
+  const intents: IntentType[] = state.intents;
+
   // check for new requests which haven't been fulfilled
+  const filteredIntents = intents.filter(
+    (intent) => intent.functionName === ""
+  );
+
+  console.log(filteredIntents);
+
   // If a request is found , send one to the solver in Next API
-  //   console.log("hello");
-  //   axios
-  //     .get(endpointUrl)
-  //     .then((response) => {
-  //       // Process the response or trigger actions based on the new requests
-  //       console.log("Response:", response.data);
-  //       // You can perform your desired logic here
-  //     })
-  //     .catch((error) => {
-  //       console.error("Error fetching data:", error);
-  //     });
+  filteredIntents.forEach(async (intentRequest) => {
+    console.log("Found pending Intent Solving request ... ");
+
+    const body = JSON.stringify({
+      requestId: intentRequest.requestId,
+      intent: intentRequest.intent,
+      userAddress: intentRequest.userAddress,
+    });
+
+    console.log("Solving the Intent ...");
+
+    const data = await fetch("/api/intents", {
+      method: "POST",
+      body,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    console.log(`Intent Solved & Stored in MRU ${await data.json()}`);
+  });
 }
 
 // Poll the endpoint every 5 minutes (300,000 milliseconds)

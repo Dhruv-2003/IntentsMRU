@@ -21,10 +21,11 @@ const tokenAddresses: { [token: string]: string } = {
 // 0x0fa8781a83e46826621b3bc094ea2a0212e71b23
 
 const getTokenAddresses = (tokens: string[]) => {
-  const addresses: any = {};
+  const addresses: string[] = [];
   for (const token of tokens) {
-    addresses[token] =
-      tokenAddresses[token.trim().toLowerCase()] || "Unknown address";
+    addresses.push(
+      tokenAddresses[token.trim().toLowerCase()] || "Unknown address"
+    );
   }
   return addresses;
 };
@@ -156,92 +157,83 @@ export const prepareParams = async (
   input: ParamsInput
 ): Promise<ParamsOutput | undefined> => {
   try {
-    try {
-      // convert protocol Name into protocol address
-      const protocolAddress = getProtocolAddress(input.protocol);
-      console.log(protocolAddress);
+    console.log(input);
+    // convert protocol Name into protocol address
+    const protocolAddress = getProtocolAddress(input.protocol);
+    console.log(protocolAddress);
 
-      let abiFunction: string;
-      let params: any[] = [];
-      // create the functionABI , get the functionABI
-      if (input.protocol == "UNISWAP") {
-        const abiInterface = new Interface(UNISWAP_ROUTER_ABI);
-        const _abiFunction = abiInterface.getFunction(input.functionName);
-        console.log(_abiFunction);
+    let abiFunction: string;
+    let params: any[] = [];
+    // create the functionABI , get the functionABI
+    if (input.protocol == "UNISWAP") {
+      const abiInterface = new Interface(UNISWAP_ROUTER_ABI);
+      const _abiFunction = abiInterface.getFunction(input.functionName);
+      console.log(_abiFunction);
 
-        // convert to string
-        abiFunction = JSON.stringify(_abiFunction);
-        console.log(abiFunction);
-      } else if (input.protocol == "AAVE") {
-        const abiInterface = new Interface(AAVE_LENDING_POOL_ABI);
-        const _abiFunction = abiInterface.getFunction(input.functionName);
-        console.log(_abiFunction);
+      // convert to string
+      abiFunction = JSON.stringify(_abiFunction);
+      console.log(abiFunction);
+    } else if (input.protocol == "AAVE") {
+      const abiInterface = new Interface(AAVE_LENDING_POOL_ABI);
+      const _abiFunction = abiInterface.getFunction(input.functionName);
+      console.log(_abiFunction);
 
-        // convert to string
-        abiFunction = JSON.stringify(_abiFunction);
-        console.log(abiFunction);
-      } else {
-        throw new Error("Invalid Protocol");
-      }
-
-      // prepare the params from tokens and value depending on the protocol
-      const tokenAddresses = getTokenAddresses(input.tokens);
-      // console.log("Addresses : ", addresses);
-      // console.log(addresses[tokensArray[0]]);
-
-      if (input.protocol == "UNISWAP") {
-        //     struct ExactInputSingleParams {
-        //     address tokenIn;
-        //     address tokenOut;
-        //     uint24 fee;
-        //     address recipient;
-        //     uint256 deadline;
-        //     uint256 amountIn;
-        //     uint256 amountOutMinimum;
-        //     uint160 sqrtPriceLimitX96;
-        // }
-        // create the params acc to the function
-        const deadline = Math.round(new Date().getTime() / 1000) + 86400;
-        params = [
-          {
-            tokenIn: tokenAddresses[0],
-            tokenOut: tokenAddresses[1],
-            fee: 3000,
-            recipient: input.userAddress,
-            deadline: deadline,
-            amountIn: input.values[0],
-            amountOutMinimum: 0,
-            sqrtPriceLimitX96: 0,
-          },
-        ];
-      } else if (input.protocol == "AAVE") {
-        // create the params acc to the function
-        if (input.functionName == "borrow") {
-          params = [
-            tokenAddresses[0],
-            input.values[0],
-            1,
-            0,
-            input.userAddress,
-          ];
-        } else if (input.functionName == "repay") {
-          params = [tokenAddresses[0], input.values[0], 1, input.userAddress];
-        }
-      }
-
-      const data: ParamsOutput = {
-        protocolAddress: protocolAddress,
-        functionName: input.functionName,
-        abiFunction: abiFunction,
-        params: params,
-        txValue: 0,
-      };
-
-      return data;
-      // txValue if needed
-    } catch (error) {
-      console.log(error);
+      // convert to string
+      abiFunction = JSON.stringify(_abiFunction);
+      console.log(abiFunction);
+    } else {
+      throw new Error("Invalid Protocol");
     }
+
+    // prepare the params from tokens and value depending on the protocol
+    const tokenAddresses = getTokenAddresses(input.tokens);
+    // console.log("Addresses : ", addresses);
+    // console.log(addresses[tokensArray[0]]);
+
+    if (input.protocol == "UNISWAP") {
+      //     struct ExactInputSingleParams {
+      //     address tokenIn;
+      //     address tokenOut;
+      //     uint24 fee;
+      //     address recipient;
+      //     uint256 deadline;
+      //     uint256 amountIn;
+      //     uint256 amountOutMinimum;
+      //     uint160 sqrtPriceLimitX96;
+      // }
+      // create the params acc to the function
+      const deadline = Math.round(new Date().getTime() / 1000) + 86400;
+      params = [
+        {
+          tokenIn: tokenAddresses[0],
+          tokenOut: tokenAddresses[1],
+          fee: 3000,
+          recipient: input.userAddress,
+          deadline: deadline,
+          amountIn: input.values[0],
+          amountOutMinimum: 0,
+          sqrtPriceLimitX96: 0,
+        },
+      ];
+    } else if (input.protocol == "AAVE") {
+      // create the params acc to the function
+      if (input.functionName == "borrow") {
+        params = [tokenAddresses[0], input.values[0], 1, 0, input.userAddress];
+      } else if (input.functionName == "repay") {
+        params = [tokenAddresses[0], input.values[0], 1, input.userAddress];
+      }
+    }
+
+    const data: ParamsOutput = {
+      protocolAddress: protocolAddress,
+      functionName: input.functionName,
+      abiFunction: abiFunction,
+      params: params,
+      txValue: 0,
+    };
+
+    return data;
+    // txValue if needed
   } catch (error) {
     console.log(error);
   }

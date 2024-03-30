@@ -49,9 +49,9 @@ export async function POST(request: NextRequest) {
       txValue: params.txValue,
     });
 
-    if (ack) {
-      console.log("Ack received");
-    }
+    // if (ack) {
+    //   console.log("Ack received");
+    // }
 
     return new Response("ReuestCall Successful", {
       headers: {

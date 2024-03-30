@@ -116,50 +116,52 @@ interface SolveIntentType {
 }
 
 export const solveIntent = async (solveIntentData: SolveIntentType) => {
-  const wallet = new Wallet(
-    "0x0123456789012345678901234567890123456789012345678901234567890123"
-  );
+  console.log(solveIntentData);
 
-  const actionName = "solve";
+  // const wallet = new Wallet(
+  //   "0x0123456789012345678901234567890123456789012345678901234567890123"
+  // );
 
-  try {
-    const response = await fetch(
-      `${process.env.ROLLUP_HOST}/getEIP712Types/${actionName}`
-    );
+  // const actionName = "solve";
 
-    const eip712Types = (await response.json()).eip712Types;
+  // try {
+  //   const response = await fetch(
+  //     `${process.env.ROLLUP_HOST}/getEIP712Types/${actionName}`
+  //   );
 
-    const payload: SolveType = {
-      requestId: solveIntentData.requestId,
-      solverAddress: wallet.address,
-      params: JSON.stringify(solveIntentData.params),
-      abiFunction: solveIntentData.abiFunction,
-      functionName: solveIntentData.functionName,
-      protocolAddress: solveIntentData.protocolAddress,
-      txValue: solveIntentData.txValue,
-    };
+  //   const eip712Types = (await response.json()).eip712Types;
 
-    const signature = await wallet.signTypedData(domain, eip712Types, payload);
+  //   const payload: SolveType = {
+  //     requestId: solveIntentData.requestId,
+  //     solverAddress: wallet.address,
+  //     params: JSON.stringify(solveIntentData.params),
+  //     abiFunction: solveIntentData.abiFunction,
+  //     functionName: solveIntentData.functionName,
+  //     protocolAddress: solveIntentData.protocolAddress,
+  //     txValue: solveIntentData.txValue,
+  //   };
 
-    const body = JSON.stringify({
-      msgSender: wallet.address,
-      signature,
-      payload,
-    });
+  //   const signature = await wallet.signTypedData(domain, eip712Types, payload);
 
-    const res = await fetch(`${process.env.ROLLUP_HOST}/${actionName}`, {
-      method: "POST",
-      body,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+  //   const body = JSON.stringify({
+  //     msgSender: wallet.address,
+  //     signature,
+  //     payload,
+  //   });
 
-    const json = await res.json();
-    console.log(`Response: ${JSON.stringify(json, null, 2)}`);
-    console.log(json);
-    return { ack: json };
-  } catch (error) {
-    console.log(error);
-  }
+  //   const res = await fetch(`${process.env.ROLLUP_HOST}/${actionName}`, {
+  //     method: "POST",
+  //     body,
+  //     headers: {
+  //       "Content-Type": "application/json",
+  //     },
+  //   });
+
+  //   const json = await res.json();
+  //   console.log(`Response: ${JSON.stringify(json, null, 2)}`);
+  //   console.log(json);
+  //   return { ack: json };
+  // } catch (error) {
+  //   console.log(error);
+  // }
 };

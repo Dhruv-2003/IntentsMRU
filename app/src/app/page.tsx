@@ -16,7 +16,9 @@ export default function Home() {
       const body = JSON.stringify({
         requestId: 1,
         intent: "I want to swap WMATIC for 0.00001USDC",
+        userAddress: "0x898d0DBd5850e086E6C09D2c83A26Bb5F1ff8C33",
       });
+
       const data = await fetch("/api/intents", {
         method: "POST",
         body,
@@ -42,6 +44,7 @@ export default function Home() {
               and our network of solvers will turn your words into code that
               executes seamlessly on-chain.
             </p>
+            <Button onClick={performAPICall}>Call</Button>
 
             <Link
               href={"/app"}
