@@ -14,7 +14,7 @@ import {
 import React from "react";
 import IntentSuggestions from "./intent-suggestions";
 import Link from "next/link";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { TypeAnimation } from "react-type-animation";
 import { Separator } from "@/components/ui/separator";
 import moment from "moment";
@@ -101,8 +101,18 @@ export default function AppPage() {
                 Tokens:
               </div>
               <div className="flex items-center gap-2">
-                <Badge>Matic</Badge>
-                <Badge>USDC</Badge>
+                <Badge
+                  variant={"secondary"}
+                  className=" border border-neutral-500"
+                >
+                  Matic
+                </Badge>
+                <Badge
+                  variant={"secondary"}
+                  className=" border border-neutral-500"
+                >
+                  USDC
+                </Badge>
               </div>
             </div>
             <div className=" flex items-start gap-3">
@@ -113,8 +123,12 @@ export default function AppPage() {
               <div className=" w-40 text-neutral-600 font-semibold">Chain:</div>
               <div>Sepolia</div>
             </div>
-            <Button variant={"secondary"}>Execute Transaction</Button>
           </CardContent>
+          <CardFooter>
+            <Button variant={"default"} className=" w-full mt-4">
+              Execute Transaction
+            </Button>
+          </CardFooter>
         </Card>
       </div>
       <div className=" w-full max-w-4xl space-y-3">

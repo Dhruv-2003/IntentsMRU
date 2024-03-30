@@ -7,13 +7,15 @@
 
 html {
     /* background-color: rgb(242, 240, 249); */
-    background-color: rgb(242, 242, 242);
+    background-color: rgb(228, 225, 244);
+    /* background-color: #bc95ff; */
     font-family: "Figtree", sans-serif;
 }
 
 
 
 .backgrnd-pattern {
+    /* background-color: # */
     background-image: url("../assets/pattern2.webp");
     background-size: contain;
     background-repeat: no-repeat;
