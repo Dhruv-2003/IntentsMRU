@@ -8,7 +8,7 @@
     <defs>
         <marker markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" viewBox="0 0 5 5"
             orient="auto" id="SvgjsMarker1747">
-            <polygon points="0,5 1.6666666666666667,2.5 0,0 5,2.5" fill="hsl(0, 0%, 30%)"></polygon>
+            <polygon points="0,5 1.6666666666666667,2.5 0,0 5,2.5" fill="#000000"></polygon>
         </marker>
     </defs>
 </svg>
