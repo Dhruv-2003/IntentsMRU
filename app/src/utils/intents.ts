@@ -57,8 +57,31 @@ export const getGptCompletion = async (
   const command = intentMsg;
   console.log("Command : ", command);
 
-  const prompt = `Extract the tokens involved, protocol, parameters and their values in one line from the following command:${command}.Assume any suitable protocol like  UNISWAP, AAVE, etc when not mentioned and from the protocols code, figure out which function is being executed
-    Return the response strictly in the following format - protocol:{{protocol}}\ntokens:[token1, token2, ..etc]\nfunction:{{function(param1, param2, ..etc)}}\nvalues:[value1,value2,etc]
+  const prompt = `Extract the tokens involved, protocol, parameters and their values in one line from the following command:${command}. Figure out which function is being executed
+
+    We only offer the following Protocols, functions  & Token for each of them via intent:
+    - UNISWAP :  to swap tokens on V3 for exact input token or exact output token
+
+    Functions
+    1.exactInputSingle(struct ISwapRouter.ExactInputSingleParams params)
+    2.exactOutputSingle(struct ISwapRouter.ExactOutputSingleParams params)
+
+    Tokens
+    USDC ,  WMATIC ,  WETH ,
+
+    - AAVE : to supply & borrow assets tokens 
+
+    Functions
+    1.supply(address asset, uint256 amount, address onBehalfOf, uint16 referralCode)
+    2.withdraw(address asset, uint256 amount, address to)
+    3.borrow(address _asset, uint256 _amount, uint256 _interestRateMode, uint16 _referralCode, address _onBehalfOf)
+    4.repay(address _asset,uint256 _amount,uint256 _interestRateMode,address _onBehalfOf)
+
+    Tokens
+    USDT , MATIC
+    
+    Return the response strictly in the following format - protocol:{{protocol}}\ntokens:[token1, token2, ..etc]\nfunction:{{function(param1, param2, ..etc)}}\nvalues:[value1,value2,etc] 
+    the regex format for the response should be protocol:\s*(\w+)\s*tokens:\s*\[(\w+),\s*(\w+)\]\s*function:\s*(\w+)\((.*?)\)\s*values:\s*\[(\d+(\.\d+)?)\]
 
     For example for the intent : I want to swap WMATIC for 0.00001USDC, the response would be strictly in the following format:
     protocol:UNISWAP
@@ -78,7 +101,7 @@ export const getGptCompletion = async (
     function:repay(_asset, _amount, _rateMode, _onBehalfOf)
     values:[0.0001]
     
-    Don't add anything else in the format , just give me protocol , tokens , functions & values in the mentioned format
+    Don't add anything else in the format , just give me protocol , tokens , functions & values in the mentioned format and nothing else in the whole response. Don't prefix or suffix anything else
     `;
 
   // We currently only offer the following protocol and their respective functions.
@@ -102,6 +125,7 @@ export const getGptCompletion = async (
 
   if (answer && answer.content) {
     commandArray = answer.content.split("\n");
+    // commandArray = commandArray.slice(2);
 
     const protocolPart = commandArray[0];
     const protocol = protocolPart.split(":")[1].trim();
@@ -157,10 +181,10 @@ export const prepareParams = async (
   input: ParamsInput
 ): Promise<ParamsOutput | undefined> => {
   try {
-    console.log(input);
+    // console.log(input);
     // convert protocol Name into protocol address
     const protocolAddress = getProtocolAddress(input.protocol);
-    console.log(protocolAddress);
+    // console.log(protocolAddress);
 
     let abiFunction: string;
     let params: any[] = [];
@@ -168,11 +192,11 @@ export const prepareParams = async (
     if (input.protocol == "UNISWAP") {
       const abiInterface = new Interface(UNISWAP_ROUTER_ABI);
       const _abiFunction = abiInterface.getFunction(input.functionName);
-      console.log(_abiFunction);
+      // console.log(_abiFunction);
 
       // convert to string
       abiFunction = JSON.stringify(_abiFunction);
-      console.log(abiFunction);
+      // console.log(abiFunction);
     } else if (input.protocol == "AAVE") {
       const abiInterface = new Interface(AAVE_LENDING_POOL_ABI);
       const _abiFunction = abiInterface.getFunction(input.functionName);
