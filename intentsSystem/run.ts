@@ -16,7 +16,7 @@ const walletTwo = new Wallet(
 
 const getBody = async (actionName: ActionName, wallet: Wallet) => {
   const walletAddress = wallet.address;
-  const res = await fetch(`http://localhost:3000/`);
+  const res = await fetch(`http://localhost:5050/`);
   const newReqId = (await res.json()).state.totalRequests;
   console.log(newReqId);
 
@@ -53,35 +53,33 @@ const getBody = async (actionName: ActionName, wallet: Wallet) => {
       txValue: 0,
     };
   }
-  // console.log(payload);
-  // console.log(schemas[actionName].EIP712TypedData.types);
 
-  try {
-    const signature = await wallet.signTypedData(
-      domain,
-      schemas[actionName].EIP712TypedData.types,
-      payload
-    );
+  console.log(payload);
+  console.log(schemas[actionName].EIP712TypedData.types);
+  // console.log(domain);
 
-    console.log(signature);
+  const signature = await wallet.signTypedData(
+    domain,
+    schemas[actionName].EIP712TypedData.types,
+    payload
+  );
 
-    const body = JSON.stringify({
-      msgSender: walletAddress,
-      signature,
-      payload,
-    });
+  // console.log(signature);
 
-    return body;
-  } catch (error) {
-    console.log(error);
-  }
+  const body = JSON.stringify({
+    msgSender: walletAddress,
+    signature,
+    payload,
+  });
+
+  return body;
 };
 
 const run = async (actionName: ActionName, wallet: Wallet) => {
   const start = Date.now();
   const body = await getBody(actionName, wallet);
 
-  const res = await fetch(`http://localhost:3000/${actionName}`, {
+  const res = await fetch(`http://localhost:5050/${actionName}`, {
     method: "POST",
     body,
     headers: {

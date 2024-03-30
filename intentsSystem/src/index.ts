@@ -55,6 +55,7 @@ app.post("/:reducerName", async (req: Request, res: Response) => {
   const schema = schemas[action];
 
   try {
+    console.log(msgSender, signature, payload);
     const newAction = schema.newAction({ msgSender, signature, payload });
     const ack = await mru.submitAction(reducerName, newAction);
     res.status(201).send({ ack });
@@ -76,6 +77,6 @@ app.get("/", (_req: Request, res: Response) => {
   return res.send({ state: solverMarketMachine?.state.unwrap() });
 });
 
-app.listen(3000, () => {
-  console.log("listening on port 3000");
+app.listen(5050, () => {
+  console.log("listening on port 5050");
 });

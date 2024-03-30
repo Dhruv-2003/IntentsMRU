@@ -77,6 +77,7 @@ const solveHandler: STF<SolverMarket, SolveType> = {
       protocolAddress,
       txValue,
     } = inputs;
+
     if (!state.intents.find((intent) => intent.requestId === requestId)) {
       throw new Error("Request doesn't exists");
     }
@@ -87,6 +88,7 @@ const solveHandler: STF<SolverMarket, SolveType> = {
     }
 
     const reqIndex = findIndexOfIntent(state, requestId);
+    console.log(reqIndex);
     state.intents[reqIndex].solverAddress = solverAddress;
     state.intents[reqIndex].params = JSON.parse(params) as any[];
     state.intents[reqIndex].ABIFunction = abiFunction;
@@ -102,6 +104,7 @@ const solveHandler: STF<SolverMarket, SolveType> = {
       protocolAddress: protocolAddress,
       txValue: txValue,
     });
+    console.log(txData);
 
     // TODO: check restriction in terms of the protocol we are using, so the protocol addres is correct
     // Function even exists for that protocol in the config

@@ -16,7 +16,7 @@ export const solveInentSchema = new ActionSchema("solve", {
   solverAddress: SolidityType.ADDRESS,
   params: SolidityType.STRING,
   abiFunction: SolidityType.STRING,
-  funtionName: SolidityType.STRING,
+  functionName: SolidityType.STRING,
   protocolAddress: SolidityType.ADDRESS,
   txValue: SolidityType.UINT,
 });
