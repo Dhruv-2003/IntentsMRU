@@ -21,29 +21,27 @@ interface Props {
 const intentSuggestions = [
   {
     title: "Swap",
-    description: "Exchange one cryptocurrency for another",
-  },
-  {
-    title: "Send",
-    description: "Transfer funds from your wallet to another address",
-  },
-  {
-    title: "Random",
-    description:
-      " Lorem ipsum dolor, sit amet consectetur adipisicing elit. Perspiciatis voluptate illo iusto! Earum",
+    description: "I want to swap WMATIC for 1 USDC",
   },
   {
     title: "Swap",
-    description: "Exchange one cryptocurrency for another",
+    description: "I want to swap 1 WMATIC for USDC",
+  },
+  {
+    title: "Borrow",
+    description: "I want to borrow 10 USDT from AAVE",
+  },
+  {
+    title: "Repay",
+    description: "I want to repay 5 USDT against my borrowing from AAVE",
   },
   {
     title: "Send",
     description: "Transfer funds from your wallet to another address",
   },
   {
-    title: "Random",
-    description:
-      " Lorem ipsum dolor, sit amet consectetur adipisicing elit. Perspiciatis voluptate illo iusto! Earum",
+    title: "Bridge",
+    description: "I want to Bridge 0.01 WETH from Polygon Mumbai to Sepolia",
   },
 ];
 

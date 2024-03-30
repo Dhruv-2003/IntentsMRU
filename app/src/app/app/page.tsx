@@ -19,6 +19,8 @@ import { TypeAnimation } from "react-type-animation";
 import { Separator } from "@/components/ui/separator";
 import moment from "moment";
 import { Badge } from "@/components/ui/badge";
+import { requestIntent } from "@/utils/rollup";
+import { useAccount } from "wagmi";
 
 const messages = [
   { time: new Date(), text: "Executing your intent..." },
@@ -28,6 +30,7 @@ const messages = [
 
 export default function AppPage() {
   const [intent, setIntent] = React.useState("");
+  const { address: account } = useAccount();
 
   return (
     <div className=" flex items-center flex-col gap-8 justify-start min-h-[90vh] bg-gradient-to-b from-purple-400/40 via-violet-500/40 to-indigo-600/40 py-20 max-w-7xl mx-auto rounded-xl">
@@ -49,7 +52,15 @@ export default function AppPage() {
             )}
           </div>
         </Label>
-        <Button className="py-0 h-10 mb-0.5 flex items-center gap-2">
+        <Button
+          className="py-0 h-10 mb-0.5 flex items-center gap-2"
+          onClick={() =>
+            requestIntent({
+              userAddress: account as string,
+              intent: intent,
+            })
+          }
+        >
           <div>Fire my intent</div>
           <ChevronRightIcon className=" h-4 w-4" />{" "}
         </Button>
@@ -137,34 +148,4 @@ export default function AppPage() {
       </div>
     </div>
   );
-}
-
-{
-  /* <TypeAnimation
-                sequence={[
-                  "Lorem ipsum dolor sit, amet consectetur adipisicing elit. Minus, mollitia recusandae? Consequatur accusamus assumenda quos officia nostrum! Nam veniam itaque, explicabo velit, error iure impedit totam et fuga, debitis est!",
-                  1000,
-                  // () => {
-                  //   console.log("Sequence completed");
-                  // },
-                ]}
-                wrapper="span"
-                cursor={true}
-                repeat={Infinity}
-              /> */
-}
-
-{
-  /* export type IntentType = {
-  requestId: number;
-  userAddress: AddressLike;
-  solverAddress: AddressLike;
-  intent: string;
-  params: any[]; // in format [param1 , param2]
-  ABIFunction: string; // in format "function name(uint param1, bytes param2)"
-  functionName: string; // function Name for interface
-  protocolAddress: AddressLike; // to address
-  txValue: number; // in ethers format
-  solvedTxData: {}; // { to: ,  data: , value:  }
-}; */
 }
