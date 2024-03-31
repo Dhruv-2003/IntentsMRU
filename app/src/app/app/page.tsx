@@ -21,16 +21,21 @@ import moment from "moment";
 import { Badge } from "@/components/ui/badge";
 import { IntentType, getIntentData, requestIntent } from "@/utils/rollup";
 import { useAccount, useChains, usePublicClient, useWalletClient } from "wagmi";
-import { formatUnits } from "ethers";
+import { Interface, formatUnits, parseUnits } from "ethers";
+import { cn } from "@/lib/utils";
+import { ERC20_ABI } from "@/constants";
+// import { ERC20_ABI } from "@/constants";
 
 export interface messageType {
   time: Date;
   text: string;
 }
-const messages: messageType[] = [];
-// { time: new Date(), text: "Executing your intent..." },
-// { time: new Date(), text: "Sending transaction to Uniswap..." },
-// { time: new Date(), text: "Fetching transaction preview..." },
+
+const approvalFunctionName = [
+  "exactInputSingle",
+  "exactOutputSingle",
+  "supply",
+];
 
 const UNISWAP_V3ROUTER_ADDRESS = "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45";
 const AAVE_LENDING_POOL_ADDRESS = "0xcC6114B983E4Ed2737E9BD3961c9924e6216c704";
@@ -59,6 +64,21 @@ const getTokenName = (tokens: string[]) => {
   return addresses;
 };
 
+const parseTokenDecimals = (tokens: string[], values: string[]) => {
+  const _values: string[] = [];
+
+  for (let i = 0; i < values.length; i++) {
+    _values.push(
+      parseUnits(
+        values[i],
+        tokenDecimals[tokens[i].trim().toLowerCase()]
+      ).toString()
+    );
+  }
+
+  return _values;
+};
+
 const getProtocolName = (protocolAddress: string) => {
   if (protocolAddress == UNISWAP_V3ROUTER_ADDRESS) {
     return "UNISWAP";
@@ -81,6 +101,7 @@ export default function AppPage() {
   const [protocolName, setProtocolName] = useState<string>();
   const [tokens, setTokens] = useState<string[]>();
   const [value, setValue] = useState<string>();
+  const [messages, setMessages] = useState<messageType[]>([]);
   // const [intervalId, setIntervalId] = useState<number>();
   const [reqId, setReqId] = useState<number>();
 
@@ -96,10 +117,13 @@ export default function AppPage() {
       setReqId(data?.requestId);
 
       handleStartPoll(data?.requestId);
-      messages.push({
-        time: new Date(),
-        text: `Intent Request Created with Id: ${data?.requestId}`,
-      });
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        {
+          time: new Date(),
+          text: `Intent Request Created with Id: ${data?.requestId}`,
+        },
+      ]);
     } catch (error) {
       console.log(error);
     }
@@ -118,16 +142,20 @@ export default function AppPage() {
       // If the solver data isn't present , then show "Request Sent to the Solver Market MRU"
       if (intentData?.functionName == "") {
         console.log("Request Sent to the Solver Market MRU...");
-        messages.push({
-          time: new Date(),
-          text: "Request Sent to the Solver Market MRU...",
-        });
+
+        setMessages((prevMessages) => [
+          ...prevMessages,
+          {
+            time: new Date(),
+            text: "Request Sent to the Solver Market MRU...",
+          },
+          {
+            time: new Date(),
+            text: "Waiting for the Solver to solve it ...",
+          },
+        ]);
 
         console.log("Waiting for the Solver to solve it ...");
-        messages.push({
-          time: new Date(),
-          text: "Waiting for the Solver to solve it ...",
-        });
 
         console.log(new Date());
       } else if (
@@ -137,16 +165,18 @@ export default function AppPage() {
         handleStopPoll();
         // If the solver data is present , then show "Intent solving completed ..."
         console.log("Intent solving completed by the solver...");
-        messages.push({
-          time: new Date(),
-          text: "Intent solving completed by the solver...",
-        });
-
         console.log("MRU constructed the txData successfully ...");
-        messages.push({
-          time: new Date(),
-          text: "MRU constructed the txData successfully ...",
-        });
+        setMessages((prevMessages) => [
+          ...prevMessages,
+          {
+            time: new Date(),
+            text: "Intent solving completed by the solver...",
+          },
+          {
+            time: new Date(),
+            text: "MRU constructed the transaction Data successfully ...",
+          },
+        ]);
 
         setIntentRequestData(intentData);
         handleIntentData(intentData);
@@ -169,11 +199,17 @@ export default function AppPage() {
     if (protocolName == "UNISWAP") {
       const params = intentData.params[0];
       tokenName = getTokenName([params.tokenIn, params.tokenOut]);
-      value = formatUnits(params.amountIn, tokenDecimals[tokenName[0]]);
+      value = formatUnits(
+        params.amountIn,
+        tokenDecimals[tokenName[0].trim().toLowerCase()]
+      );
     } else if (protocolName == "AAVE") {
       const params = intentData.params[0];
       tokenName = getTokenName([params]);
-      value = formatUnits(intentData.params[1], tokenDecimals[tokenName[0]]);
+      value = formatUnits(
+        intentData.params[1],
+        tokenDecimals[tokenName[0].trim().toLowerCase()]
+      );
     }
 
     // extract the value
@@ -198,10 +234,134 @@ export default function AppPage() {
     intervalId = interval;
   };
 
-  const executeTx = () => {
+  const executeTx = async () => {
+    if (!intentRequestData) {
+      console.log("No intent data provided");
+      return;
+    }
+    if (!tokens) {
+      console.log("No intent data provided");
+      return;
+    }
     // determine the type of Tx
-    // If needed approval in case of token swap , etc , perform that
-    // Then execute the Tx brought from MRU
+    if (approvalFunctionName.includes(intentRequestData?.functionName)) {
+      // If needed approval in case of token swap , etc , perform that
+      if (protocolName === "UNISWAP") {
+        // const amount = parseUnits(
+        //   intentRequestData.params[0].amountIn,
+        //   tokenDecimals[tokens[0].toLowerCase()]
+        // );
+        const data = await publicClient?.simulateContract({
+          account,
+          address: intentRequestData.params[0].tokenIn as `0x${string}`,
+          abi: ERC20_ABI,
+          functionName: "approve",
+          args: [
+            intentRequestData.protocolAddress as `0x${string}`,
+            intentRequestData.params[0].amountIn,
+          ],
+        });
+        if (!walletClient) {
+          console.log("wallletClient not found");
+        }
+        // @ts-ignore
+        const hash = await walletClient.writeContract(data.request);
+        console.log(hash);
+        const approvalTx = await publicClient?.waitForTransactionReceipt({
+          hash,
+        });
+        console.log(approvalTx);
+
+        console.log("Approval completed ..");
+
+        const txData = JSON.parse(intentRequestData.solvedTxData);
+        console.log(txData);
+
+        // Then execute the Tx brought from MRU
+        const uniswapHash = await walletClient?.sendTransaction({
+          account,
+          to: txData.to,
+          data: txData.data,
+          value: txData.value,
+        });
+        if (!uniswapHash) {
+          return;
+        }
+        const uniswapTx = await publicClient?.waitForTransactionReceipt({
+          hash: uniswapHash,
+        });
+        console.log(uniswapTx);
+
+        console.log("Uniswap Tx completed ..");
+      } else if (protocolName === "AAVE") {
+        // const amount = parseUnits(
+        //   intentRequestData.params[1],
+        //   tokenDecimals[tokens[0].toLowerCase()]
+        // );
+        const data = await publicClient?.simulateContract({
+          account,
+          address: intentRequestData.params[0].tokenIn as `0x${string}`,
+          abi: ERC20_ABI,
+          functionName: "approve",
+          args: [
+            intentRequestData.protocolAddress as `0x${string}`,
+            intentRequestData.params[1],
+          ],
+        });
+        if (!walletClient) {
+          console.log("wallletClient not found");
+        }
+        // @ts-ignore
+        const hash = await walletClient.writeContract(data.request);
+        console.log(hash);
+        const approvalTx = await publicClient?.waitForTransactionReceipt({
+          hash,
+        });
+        console.log(approvalTx);
+
+        console.log("Approval completed ..");
+
+        const txData = JSON.parse(intentRequestData.solvedTxData);
+        console.log(txData);
+
+        // Then execute the Tx brought from MRU
+        const aaveHash = await walletClient?.sendTransaction({
+          account,
+          to: txData.to,
+          data: txData.data,
+          value: txData.value,
+        });
+        if (!aaveHash) {
+          return;
+        }
+        const aaveTx = await publicClient?.waitForTransactionReceipt({
+          hash: aaveHash,
+        });
+        console.log(aaveTx);
+
+        console.log("Aave Tx completed ..");
+      }
+    } else {
+      const txData = JSON.parse(intentRequestData.solvedTxData);
+      console.log(txData);
+
+      // Then execute the Tx brought from MRU
+      const txHash = await walletClient?.sendTransaction({
+        account,
+        to: txData.to,
+        data: txData.data,
+        value: txData.value,
+      });
+      if (!txHash) {
+        return;
+      }
+      const Tx = await publicClient?.waitForTransactionReceipt({
+        hash: txHash,
+      });
+      console.log(Tx);
+
+      console.log("Tx completed ..");
+    }
   };
 
   return (
@@ -231,13 +391,13 @@ export default function AppPage() {
           <div>Fire my intent</div>
           <ChevronRightIcon className=" h-4 w-4" />{" "}
         </Button>
-        {/* <Button
+        <Button
           className="py-0 h-10 mb-0.5 flex items-center gap-2"
-          onClick={() => handleStartPoll(reqId)}
+          onClick={() => parseTokenDecimals(["USDC", "WMATIC"], ["10"])}
         >
           <div>Fire my intent</div>
           <ChevronRightIcon className=" h-4 w-4" />{" "}
-        </Button> */}
+        </Button>
       </div>
       <div className=" w-full max-w-4xl space-y-3">
         {/* <div>Executing your intent</div> */}
@@ -254,6 +414,7 @@ export default function AppPage() {
                     <TypeAnimation
                       sequence={[message.text, 1000]}
                       wrapper="span"
+                      className={cn()}
                       cursor={true}
                       repeat={Infinity}
                     />
@@ -291,9 +452,10 @@ export default function AppPage() {
                   Tokens:
                 </div>
                 <div className="flex items-center gap-2">
-                  {tokens?.map((token) => {
+                  {tokens?.map((token, idx) => {
                     return (
                       <Badge
+                        key={idx}
                         variant={"secondary"}
                         className=" border border-neutral-500"
                       >
@@ -317,7 +479,11 @@ export default function AppPage() {
               </div>
             </CardContent>
             <CardFooter>
-              <Button variant={"default"} className=" w-full mt-4">
+              <Button
+                onClick={() => executeTx()}
+                variant={"default"}
+                className=" w-full mt-4"
+              >
                 Execute Transaction
               </Button>
             </CardFooter>

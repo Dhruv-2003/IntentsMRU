@@ -38,17 +38,19 @@ const getTokenAddresses = (tokens: string[]) => {
   return addresses;
 };
 
-const parseTokenDecimals = (tokens: string[]) => {
-  const values: string[] = [];
+const parseTokenDecimals = (tokens: string[], values: string[]) => {
+  const _values: string[] = [];
 
-  for (const token of tokens) {
-    values.push(
-      parseUnits(token, tokenDecimals[token.trim().toLowerCase()]).toString()
+  for (let i = 0; i < values.length; i++) {
+    _values.push(
+      parseUnits(
+        values[i],
+        tokenDecimals[tokens[i].trim().toLowerCase()]
+      ).toString()
     );
   }
-  return values;
+  return _values;
 };
-
 const getProtocolAddress = (protocol: string) => {
   if (protocol == "UNISWAP") {
     return UNISWAP_V3ROUTER_ADDRESS;
@@ -88,7 +90,7 @@ export const getGptCompletion = async (
     Tokens
     USDC ,  WMATIC ,  WETH ,
 
-    - AAVE : to supply & borrow assets tokens 
+    - AAVE : to supply & borrow assets tokens
 
     Functions
     1.supply(address asset, uint256 amount, address onBehalfOf, uint16 referralCode)
@@ -98,9 +100,8 @@ export const getGptCompletion = async (
 
     Tokens
     USDT , MATIC
-    
-    Return the response strictly in the following format - protocol:{{protocol}}\ntokens:[token1, token2, ..etc]\nfunction:{{function(param1, param2, ..etc)}}\nvalues:[value1,value2,etc] 
-    the regex format for the response should be protocol:\s*(\w+)\s*tokens:\s*\[(\w+),\s*(\w+)\]\s*function:\s*(\w+)\((.*?)\)\s*values:\s*\[(\d+(\.\d+)?)\]
+
+    Return the response strictly in the following format - protocol:{{protocol}}\ntokens:[token1, token2, ..etc]\nfunction:{{function(param1, param2, ..etc)}}\nvalues:[value1,value2,etc]
 
     For example for the intent : I want to swap WMATIC for 0.00001USDC, the response would be strictly in the following format:
     protocol:UNISWAP
@@ -118,8 +119,8 @@ export const getGptCompletion = async (
     protocol:AAVE
     tokens:[USDT]
     function:repay(_asset, _amount, _rateMode, _onBehalfOf)
-    values:[0.0001] 
-    
+    values:[0.0001]
+
     Don't prefix or suffix anything else. Don't add anything in the response from your side : the regex format for the response should be protocol:\s*(\w+)\s*tokens:\s*\[(\w+),\s*(\w+)\]\s*function:\s*(\w+)\((.*?)\)\s*values:\s*\[(\d+(\.\d+)?)\]
     `;
 
@@ -247,7 +248,15 @@ export const prepareParams = async (
       // }
       // create the params acc to the function
       const deadline = Math.round(new Date().getTime() / 1000) + 86400;
-      const values: string[] = parseTokenDecimals(input.values);
+
+      // I have the token names & their respictive values , we want to convert them accordingly
+
+      const values: string[] = await parseTokenDecimals(
+        input.tokens,
+        input.values
+      );
+      // console.log(values);
+
       params = [
         {
           tokenIn: tokenAddresses[0],

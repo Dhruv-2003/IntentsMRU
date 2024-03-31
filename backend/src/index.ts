@@ -70,7 +70,7 @@ async function pollEndpoint() {
 // Poll the endpoint every 5 minutes (300,000 milliseconds)
 function main() {
   try {
-    const interval = setInterval(pollEndpoint, 10000);
+    const interval = setInterval(pollEndpoint, 20000);
   } catch (error) {
     console.log(error);
   }
