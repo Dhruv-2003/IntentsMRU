@@ -80,27 +80,26 @@ export class SolverMarket extends State<
     super(state);
   }
 
-  wrap(state: SolverMarketState): SolverMarketTransport {
-    const newTree = new SolverMarketTransport(state);
-    return newTree;
-  }
-
-  clone(): State<SolverMarketState, SolverMarketTransport> {
-    return new SolverMarket(this.unwrap());
-  }
-
-  unwrap(): SolverMarketState {
+  transformer() {
     return {
-      intents: this.wrappedState.intents,
-      totalRequests: this.wrappedState.totalRequests,
-      solvers: this.wrappedState.solvers,
+      wrap: (): SolverMarketTransport => {
+        const newTree = new SolverMarketTransport(this.state);
+        return newTree;
+      },
+      unwrap: (wrappedState: SolverMarketTransport) => {
+        return {
+          intents: wrappedState.intents,
+          totalRequests: wrappedState.totalRequests,
+          solvers: wrappedState.solvers,
+        };
+      },
     };
   }
 
-  calculateRoot(): BytesLike {
-    if (this.wrappedState.intents.length === 0) {
+  getRootHash(): BytesLike {
+    if (this.state.intents.length === 0) {
       return ZeroHash;
     }
-    return this.wrappedState.merkleTree.getHexRoot();
+    return this.transformer().wrap().merkleTree.getHexRoot();
   }
 }

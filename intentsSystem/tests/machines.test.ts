@@ -3,7 +3,7 @@ import { expect } from "chai";
 import { Wallet, ZeroHash, verifyTypedData } from "ethers";
 import genesisState from "../genesis-state.json";
 import { schemas } from "../src/actions";
-import { reducers } from "../src/reducers";
+import { reducers } from "../src/transitions";
 import { ERC20, Leaves } from "../src/state";
 import { stackrConfig } from "../stackr.config";
 

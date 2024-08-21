@@ -52,18 +52,18 @@ export const requestIntent = async (requestData: {
     const newReqId = (await res2.json()).state.totalRequests;
     console.log(newReqId);
 
-    const payload: RequestType = {
+    const inputs: RequestType = {
       requestId: newReqId,
       userAddress: requestData.userAddress,
       intent: requestData.intent,
     };
 
-    const signature = await wallet.signTypedData(domain, eip712Types, payload);
+    const signature = await wallet.signTypedData(domain, eip712Types, inputs);
 
     const body = JSON.stringify({
       msgSender: wallet.address,
       signature,
-      payload,
+      inputs,
     });
 
     const res = await fetch(`http://localhost:5050/${actionName}`, {
@@ -136,7 +136,7 @@ export const solveIntent = async (solveIntentData: SolveIntentType) => {
 
     const eip712Types = (await response.json()).eip712Types;
 
-    const payload: SolveType = {
+    const inputs: SolveType = {
       requestId: solveIntentData.requestId,
       solverAddress: wallet.address,
       params: JSON.stringify(solveIntentData.params),
@@ -146,12 +146,12 @@ export const solveIntent = async (solveIntentData: SolveIntentType) => {
       txValue: solveIntentData.txValue,
     };
 
-    const signature = await wallet.signTypedData(domain, eip712Types, payload);
+    const signature = await wallet.signTypedData(domain, eip712Types, inputs);
 
     const body = JSON.stringify({
       msgSender: wallet.address,
       signature,
-      payload,
+      inputs,
     });
 
     const res = await fetch(`http://localhost:5050/${actionName}`, {

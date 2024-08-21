@@ -1,4 +1,4 @@
-import { Reducers, STF } from "@stackr/sdk/machine";
+import { Transitions, STF } from "@stackr/sdk/machine";
 import { SolverMarket, SolverMarketTransport as StateWrapper } from "./state";
 import { AddressLike, Interface, ZeroAddress, parseEther } from "ethers";
 
@@ -153,7 +153,7 @@ export const createTxData = (
   }
 };
 
-export const reducers: Reducers<SolverMarket> = {
+export const transitions: Transitions<SolverMarket> = {
   register: registerHandler,
   request: requestHandler,
   solve: solveHandler,

@@ -4,7 +4,7 @@ import { ActionEvents } from "@stackr/sdk";
 import { Playground } from "@stackr/sdk/plugins";
 import { schemas } from "./actions.ts";
 import { SolverMarketMachine, mru } from "./solver.ts";
-import { reducers } from "./reducers.ts";
+import { transitions } from "./transitions.ts";
 import cors from "cors";
 import { IntentType } from "./state.ts";
 
@@ -36,12 +36,12 @@ app.get("/blocks/:hash", async (req: Request, res: Response) => {
   if (!block) {
     return res.status(404).send({ message: "Block not found" });
   }
-  return res.send(block.data);
+  return res.send(block);
 });
 
 app.post("/:reducerName", async (req: Request, res: Response) => {
   const { reducerName } = req.params;
-  const actionReducer = reducers[reducerName];
+  const actionReducer = transitions[reducerName];
 
   if (!actionReducer) {
     res.status(400).send({ message: "no reducer for action" });
@@ -49,17 +49,17 @@ app.post("/:reducerName", async (req: Request, res: Response) => {
   }
   const action = reducerName as keyof typeof schemas;
 
-  const { msgSender, signature, payload } = req.body as {
+  const { msgSender, signature, inputs } = req.body as {
     msgSender: string;
     signature: string;
-    payload: any;
+    inputs: any;
   };
 
   const schema = schemas[action];
 
   try {
-    console.log(msgSender, signature, payload);
-    const newAction = schema.newAction({ msgSender, signature, payload });
+    console.log(msgSender, signature, inputs);
+    const newAction = schema.actionFrom({ msgSender, signature, inputs });
     const ack = await mru.submitAction(reducerName, newAction);
     res.status(201).send({ ack });
   } catch (e: any) {
@@ -77,7 +77,7 @@ events.subscribe(ActionEvents.EXECUTION_STATUS, async (action) => {
 });
 
 app.get("/", (_req: Request, res: Response) => {
-  return res.send({ state: solverMarketMachine?.state.unwrap() });
+  return res.send({ state: solverMarketMachine?.state });
 });
 
 type ActionName = keyof typeof schemas;
@@ -93,7 +93,7 @@ app.get("/getEIP712Types/:action", (_req: Request, res: Response) => {
 app.get("/intent/:requestId", (_req: Request, res: Response) => {
   // @ts-ignore
   const { requestId }: { requestId: number } = _req.params;
-  const intents = solverMarketMachine?.state.unwrap().intents;
+  const intents = solverMarketMachine?.state.intents;
 
   const intentRequest: IntentType | undefined = intents?.find(
     (intent) => intent.requestId == requestId

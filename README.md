@@ -30,6 +30,75 @@ With Intents-MRU, users can seamlessly interact with blockchain protocols and dA
 
 **Gaming and Metaverse**: Engage with blockchain-based games and metaverse platforms by expressing intentions like "mint in-game assets" or "purchase virtual land parcels."
 
+## Project Structure
+
+```
+│
+├── intentSystem ( Micro rollup )
+│   │   ├── solver.ts
+│   │   ├── state.ts
+│   │   ├── machine.ts
+│   │   ├── actions.ts
+│   │   ├── transitions.ts
+│   │   ├── index.ts
+│   │
+│   │── stackr.config.ts
+│   │── deployment.json
+│
+├── app ( frontend application )
+│
+├── backend ( syncer service b/w MRU & solver )
+```
+
+## How to run ?
+
+## Step 1 Run the Micro rollup
+
+### Run using Node.js :rocket:
+
+```bash
+npm start
+```
+
+### Run using Docker :whale:
+
+- Build the image using the following command:
+
+```bash
+# For Linux
+docker build -t {{projectName}}:latest .
+
+# For Mac with Apple Silicon chips
+docker buildx build --platform linux/amd64,linux/arm64 -t {{projectName}}:latest .
+```
+
+- Run the Docker container using the following command:
+
+```bash
+# If using SQLite as the datastore
+docker run -v ./db.sqlite:/app/db.sqlite -p <HOST_PORT>:<CONTAINER_PORT> --name={{projectName}} -it {{projectName}}:latest
+
+# If using other URI based datastores
+docker run -p <HOST_PORT>:<CONTAINER_PORT> --name={{projectName}} -it {{projectName}}:latest
+```
+
+## Step 2 Run backend service
+
+### Run backend using command :
+
+```bash
+cd backend
+bun run src/index.ts
+```
+
+## Setp 3 Run frontend
+
+### Run backend using command :
+
+```bash
+bun run start
+```
+
 ## Challenges we ran into
 
 **Front-end Challenges:**

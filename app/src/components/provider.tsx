@@ -13,7 +13,6 @@ import {
   bsc,
 } from "wagmi/chains";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
-import { AnonAadhaarProvider } from "anon-aadhaar-react";
 
 const config = getDefaultConfig({
   appName: "Discovery Donar",

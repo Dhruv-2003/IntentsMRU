@@ -132,7 +132,7 @@ export default function AppPage() {
   const getIntentRequestData = async (reqId: number) => {
     try {
       console.log("Polling the intent request Data ...");
-      if (!reqId) {
+      if (reqId == undefined) {
         console.log("No reqId found");
         return;
       }
@@ -228,7 +228,7 @@ export default function AppPage() {
   };
 
   const handleStartPoll = (reqId: number) => {
-    getIntentRequestData(reqId);
+    // getIntentRequestData(reqId);
     const interval = setInterval(() => getIntentRequestData(reqId), 10000); // Poll every 5 minutes (300,000 milliseconds)
     console.log(interval);
     intervalId = interval;
@@ -391,13 +391,6 @@ export default function AppPage() {
           <div>Fire my intent</div>
           <ChevronRightIcon className=" h-4 w-4" />{" "}
         </Button>
-        <Button
-          className="py-0 h-10 mb-0.5 flex items-center gap-2"
-          onClick={() => parseTokenDecimals(["USDC", "WMATIC"], ["10"])}
-        >
-          <div>Fire my intent</div>
-          <ChevronRightIcon className=" h-4 w-4" />{" "}
-        </Button>
       </div>
       <div className=" w-full max-w-4xl space-y-3">
         {/* <div>Executing your intent</div> */}
@@ -480,7 +473,7 @@ export default function AppPage() {
             </CardContent>
             <CardFooter>
               <Button
-                onClick={() => executeTx()}
+                onClick={executeTx}
                 variant={"default"}
                 className=" w-full mt-4"
               >

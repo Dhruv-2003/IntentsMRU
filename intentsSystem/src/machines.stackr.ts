@@ -1,6 +1,6 @@
 import { StateMachine } from "@stackr/sdk/machine";
 import genesisState from "../genesis-state.json";
-import { reducers } from "./reducers";
+import { transitions } from "./transitions";
 import { SolverMarket } from "./state";
 
 const STATE_MACHINES = {
@@ -9,8 +9,9 @@ const STATE_MACHINES = {
 
 const solverMarketStateMachine = new StateMachine({
   id: STATE_MACHINES.SolverMarket,
-  state: new SolverMarket(genesisState.state),
-  on: reducers,
+  stateClass: SolverMarket,
+  initialState: genesisState.state,
+  on: transitions,
 });
 
 export { STATE_MACHINES, solverMarketStateMachine };
