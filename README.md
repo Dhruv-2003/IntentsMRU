@@ -35,6 +35,8 @@ With Intents-MRU, users can seamlessly interact with blockchain protocols and dA
 ```
 │
 ├── intentSystem ( Micro rollup )
+│   │   |
+│   │   src
 │   │   ├── solver.ts
 │   │   ├── state.ts
 │   │   ├── machine.ts
